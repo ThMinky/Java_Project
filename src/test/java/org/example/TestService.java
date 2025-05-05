@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -152,7 +153,12 @@ public class TestService {
 
         if (receipt != null) {
             receipt.printReceipt();
-            receipt.writeReceiptToFile();
+
+            try {
+                receipt.writeReceiptToFile();
+            } catch (IOException e) {
+                fail(e.getMessage());
+            }
         }
     }
 

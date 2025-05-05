@@ -3,17 +3,25 @@ package Shop.transactions;
 import Shop.employees.Cashier;
 
 import Shop.Commodity.CustomCommoditiesDataType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 
 // Generic
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Receipt implements IReceipt {
     private int id;
@@ -119,43 +127,63 @@ public class Receipt implements IReceipt {
         System.out.println("============================");
     }
 
+    // Write receipt in txt
+//    @Override
+//    public void writeReceiptToFile() {
+//        String folderPath = "receipts";
+//        String fileName = "receipt_" + id + ".json";
+//
+//        File folder = new File(folderPath);
+//        if (!folder.exists()) {
+//            folder.mkdirs();
+//        }
+//
+//        File receiptFile = new File(folder, fileName);
+//
+//        ObjectMapper mapper = new ObjectMapper();
+//        mapper.registerModule(new JavaTimeModule());
+//        mapper.enable(SerializationFeature.INDENT_OUTPUT);
+//        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+//
+//        try {
+//            mapper.writeValue(receiptFile, this);
+//            System.out.println("Receipt written to: " + receiptFile.getAbsolutePath());
+//        } catch (IOException e) {
+//            System.err.println("Failed to write receipt: " + e.getMessage());
+//            e.printStackTrace();
+//        }
+//    }
+
     @Override
-    public void writeReceiptToFile() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    public void writeReceiptToFile() throws IOException {
+        Files.createDirectories(Paths.get("receipts"));
 
-        String folderPath = "receipts";
-        String fileName = "receipt_" + id + ".txt";
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-        File folder = new File(folderPath);
-        if (!folder.exists()) {
-            folder.mkdirs();
+        Map<String, Object> jsonData = new LinkedHashMap<>();
+        jsonData.put("id", this.id);
+
+        jsonData.put("cashierId", this.cashier.getId());
+        jsonData.put("cashierName", this.cashier.getName());
+
+        jsonData.put("issuedDateTime", this.issuedDateTime);
+
+        List<Map<String, Object>> commoditiesData = new ArrayList<>();
+        for (CustomCommoditiesDataType item : this.purchasedCommodities) {
+            Map<String, Object> itemData = new LinkedHashMap<>();
+            itemData.put("name", item.getName());
+            itemData.put("quantity", item.getQuantity());
+            itemData.put("price", item.getPrice());
+            commoditiesData.add(itemData);
         }
+        jsonData.put("purchasedCommodities", commoditiesData);
 
-        File receiptFile = new File(folder, fileName);
+        jsonData.put("totalCost", this.totalCost);
+        jsonData.put("change", this.change);
 
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(receiptFile))) {
-            writer.write("=== RECEIPT ===\n");
-            writer.write("Receipt ID: " + id + "\n");
-            writer.write("Cashier: " + cashier.getName() + "\n");
-
-            writer.write("Date: " + issuedDateTime.format(formatter) + "\n");
-            writer.write("----------------------------\n");
-
-            for (CustomCommoditiesDataType item : purchasedCommodities) {
-                BigDecimal totalItemPrice = item.getPrice().multiply(new BigDecimal(item.getQuantity()));
-                writer.write(String.format("%s - x%d - %.2f\n", item.getName(), item.getQuantity(), totalItemPrice));
-            }
-
-            writer.write("----------------------------\n");
-            writer.write(String.format("Total: %.2f\n", totalCost));
-            writer.write(String.format("Change: %.2f\n", change));
-            writer.write("============================\n");
-
-            System.out.println("Receipt written to: " + receiptFile.getAbsolutePath());
-
-        } catch (IOException e) {
-            System.err.println("Failed to write receipt: " + e.getMessage());
-            e.printStackTrace();
-        }
+        mapper.writerWithDefaultPrettyPrinter()
+                .writeValue(new File("receipts/receipt_" + this.id + ".json"), jsonData);
     }
 }

@@ -6,6 +6,8 @@ import Shop.Commodity.CustomCommoditiesDataType;
 import Shop.employees.ICashier;
 import Shop.Exceptions.CashierAlreadyExistsException;
 
+import Shop.transactions.IReceipt;
+
 // Generic
 import java.math.BigDecimal;
 import java.util.List;
@@ -25,6 +27,8 @@ public interface IStore {
     List<CustomCommoditiesDataType> getSoldCommodities();
 
     List<ICashier> getCashiers();
+
+    public List<IReceipt> getReceipts();
 
     int getReceiptCount();
 

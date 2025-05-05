@@ -9,7 +9,7 @@ import Shop.Exceptions.CashierAlreadyExistsException;
 
 import Shop.employees.ICashier;
 
-import Shop.transactions.Receipt;
+import Shop.transactions.IReceipt;
 
 // Generic
 import java.math.BigDecimal;
@@ -19,7 +19,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 
 public class Store implements IStore {
     private String name;
@@ -35,7 +34,7 @@ public class Store implements IStore {
     private List<CustomCommoditiesDataType> soldCommodities;
 
     private List<ICashier> cashiers;
-    private Queue<Receipt> receipts;
+    private List<IReceipt> receipts;
 
     private int receiptCount;
 
@@ -156,11 +155,12 @@ public class Store implements IStore {
     }
 
 
-    public Queue<Receipt> getReceipts() {
+    @Override
+    public List<IReceipt> getReceipts() {
         return receipts;
     }
 
-    public void setReceipts(Queue<Receipt> receipts) {
+    public void setReceipts(List<IReceipt> receipts) {
         this.receipts = receipts;
     }
 

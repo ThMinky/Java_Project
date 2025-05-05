@@ -90,8 +90,7 @@ public class Cashier implements ICashier {
             ICommodity available = findCommodityById(cartCommodity.getId());
 
             if (available.getQuantity() < cartCommodity.getQuantity()) {
-                throw new InsufficientQuantityException(
-                        available.getName(), available.getQuantity(), cartCommodity.getQuantity());
+                throw new InsufficientQuantityException(available.getName(), available.getQuantity(), cartCommodity.getQuantity());
             }
 
             BigDecimal itemTotal = available.getPrice().multiply(
@@ -100,12 +99,8 @@ public class Cashier implements ICashier {
 
             updateAvailableCommodity(available, cartCommodity.getQuantity());
 
-            CustomCommoditiesDataType purchased = new CustomCommoditiesDataType(
-                    available.getId(),
-                    available.getName(),
-                    cartCommodity.getQuantity(),
-                    available.getPrice()
-            );
+            CustomCommoditiesDataType purchased = new CustomCommoditiesDataType(available.getId(), available.getName(),
+                    cartCommodity.getQuantity(), available.getPrice());
             purchasedCommodities.add(purchased);
 
             updateSoldCommodities(purchased);
@@ -118,7 +113,9 @@ public class Cashier implements ICashier {
         BigDecimal change = money.subtract(totalCost);
         store.setRevenue(store.getRevenue().add(totalCost));
 
-        return generateReceipt(purchasedCommodities, totalCost, change);
+        IReceipt receipt = generateReceipt(purchasedCommodities, totalCost, change);
+        store.getReceipts().add(receipt);
+        return receipt;
     }
 
     private ICommodity findCommodityById(int id) throws CommodityNotFoundException {
