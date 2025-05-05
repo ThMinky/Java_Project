@@ -21,7 +21,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -152,13 +151,8 @@ public class TestService {
         }
 
         if (receipt != null) {
+            cashier.writeReceiptToJsonFile(receipt);
             receipt.printReceipt();
-
-            try {
-                receipt.writeReceiptToFile();
-            } catch (IOException e) {
-                fail(e.getMessage());
-            }
         }
     }
 

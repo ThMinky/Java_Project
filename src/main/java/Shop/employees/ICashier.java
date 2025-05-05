@@ -23,4 +23,6 @@ public interface ICashier {
     IReceipt sellCommodities(List<CustomCommoditiesDataType> requestedCommodities, BigDecimal money)
             throws EmptyCartException, CommodityNotFoundException, InsufficientQuantityException,
             InsufficientFundsException, CashierNotHiredException;
+
+    void writeReceiptToJsonFile(IReceipt receipt);
 }

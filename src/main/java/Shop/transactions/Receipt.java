@@ -3,29 +3,25 @@ package Shop.transactions;
 import Shop.employees.Cashier;
 
 import Shop.Commodity.CustomCommoditiesDataType;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
 
 // Generic
-import java.io.File;
-import java.io.IOException;
 import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
+@JsonPropertyOrder({"id", "cashierName", "cashierId", "issuedDateTime", "purchasedCommodities", "totalCost", "change"})
 public class Receipt implements IReceipt {
     private int id;
+
+    @JsonIgnore
     private Cashier cashier;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime issuedDateTime;
 
     private List<CustomCommoditiesDataType> purchasedCommodities;
@@ -47,6 +43,7 @@ public class Receipt implements IReceipt {
 
     // -----------------------------------------------------------------------------------------------------------------
     // --- Getters / Setters ---
+    @Override
     public int getId() {
         return id;
     }
@@ -101,6 +98,15 @@ public class Receipt implements IReceipt {
     }
     // -----------------------------------------------------------------------------------------------------------------
 
+    // --- Getters For JSON ---
+    public int getCashierId() {
+        return cashier.getId();
+    }
+
+    public String getCashierName() {
+        return cashier.getName();
+    }
+
     // --- Functions ---
     @Override
     public void printReceipt() {
@@ -125,65 +131,5 @@ public class Receipt implements IReceipt {
         System.out.printf("Total: %.2f\n", totalCost);
         System.out.printf("Change: %.2f\n", change);
         System.out.println("============================");
-    }
-
-    // Write receipt in txt
-//    @Override
-//    public void writeReceiptToFile() {
-//        String folderPath = "receipts";
-//        String fileName = "receipt_" + id + ".json";
-//
-//        File folder = new File(folderPath);
-//        if (!folder.exists()) {
-//            folder.mkdirs();
-//        }
-//
-//        File receiptFile = new File(folder, fileName);
-//
-//        ObjectMapper mapper = new ObjectMapper();
-//        mapper.registerModule(new JavaTimeModule());
-//        mapper.enable(SerializationFeature.INDENT_OUTPUT);
-//        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-//
-//        try {
-//            mapper.writeValue(receiptFile, this);
-//            System.out.println("Receipt written to: " + receiptFile.getAbsolutePath());
-//        } catch (IOException e) {
-//            System.err.println("Failed to write receipt: " + e.getMessage());
-//            e.printStackTrace();
-//        }
-//    }
-
-    @Override
-    public void writeReceiptToFile() throws IOException {
-        Files.createDirectories(Paths.get("receipts"));
-
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-
-        Map<String, Object> jsonData = new LinkedHashMap<>();
-        jsonData.put("id", this.id);
-
-        jsonData.put("cashierId", this.cashier.getId());
-        jsonData.put("cashierName", this.cashier.getName());
-
-        jsonData.put("issuedDateTime", this.issuedDateTime);
-
-        List<Map<String, Object>> commoditiesData = new ArrayList<>();
-        for (CustomCommoditiesDataType item : this.purchasedCommodities) {
-            Map<String, Object> itemData = new LinkedHashMap<>();
-            itemData.put("name", item.getName());
-            itemData.put("quantity", item.getQuantity());
-            itemData.put("price", item.getPrice());
-            commoditiesData.add(itemData);
-        }
-        jsonData.put("purchasedCommodities", commoditiesData);
-
-        jsonData.put("totalCost", this.totalCost);
-        jsonData.put("change", this.change);
-
-        mapper.writerWithDefaultPrettyPrinter()
-                .writeValue(new File("receipts/receipt_" + this.id + ".json"), jsonData);
     }
 }

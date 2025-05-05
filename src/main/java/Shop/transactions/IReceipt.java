@@ -1,11 +1,12 @@
 package Shop.transactions;
 
-import java.io.IOException;
-
 public interface IReceipt {
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // --- Getters / Setters ---
+    int getId();
+    // -----------------------------------------------------------------------------------------------------------------
 
     // --- Functions ---
     void printReceipt();
-
-    void writeReceiptToFile() throws IOException;
 }

@@ -11,10 +11,16 @@ import Shop.transactions.IReceipt;
 import Shop.transactions.Receipt;
 
 // Generic
+import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 public class Cashier implements ICashier {
     private int id;
@@ -152,4 +158,27 @@ public class Cashier implements ICashier {
         return new Receipt(receiptId, this, now, purchasedCommodities, totalCost, change);
     }
     // ------------------------------
+
+    @Override
+    public void writeReceiptToJsonFile(IReceipt receipt) {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.enable(SerializationFeature.INDENT_OUTPUT);
+
+        String folderPath = "receipts";
+        String fileName = "receipt_" + receipt.getId() + ".json";
+
+        File directory = new File(folderPath);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
+        File file = new File(directory, fileName);
+        try {
+            mapper.writeValue(file, receipt);
+            System.out.println("Receipt written to: " + file.getAbsolutePath());
+        } catch (IOException e) {
+            System.err.println("Failed to write receipt: " + e.getMessage());
+        }
+    }
 }
