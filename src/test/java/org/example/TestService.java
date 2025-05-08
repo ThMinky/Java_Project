@@ -20,11 +20,16 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestService {
+    private static int storeIdCounter = 0;
+
+    Set<IStoreService> stores;
 
     Store storeData;
     IStoreService store;
@@ -38,8 +43,11 @@ public class TestService {
 
     @BeforeEach
     public void setUp() {
-        storeData = new Store("Store", BigDecimal.valueOf(10), BigDecimal.valueOf(10), BigDecimal.valueOf(10), 3);
+        stores = new HashSet<>();
+
+        storeData = new Store(storeIdCounter + 1, "MegaStore", BigDecimal.valueOf(10), BigDecimal.valueOf(10), BigDecimal.valueOf(10), 3);
         store = new StoreService(storeData);
+        stores.add(store);
 
         cashierData = new Cashier("Bob", store.getNextCashierId(), BigDecimal.valueOf(1800), store);
         cashier = new CashierService(cashierData);
@@ -139,7 +147,7 @@ public class TestService {
     }
 
     @Test
-    public void printingAndSavingReceipt() {
+    public void printAndSaveReceipt() {
         Receipt receipt = null;
 
         try {
@@ -160,6 +168,22 @@ public class TestService {
             ReceiptFileManager.writeToFile(receipt);
             ReceiptPrinter.printReceipt(receipt);
         }
+    }
+
+    @Test
+    public void readAndPrintReceipt() {
+        assertEquals(0, store.getReceipts().size());
+
+        Set<Receipt> receipts = ReceiptFileManager.readReceiptsFromFiles(stores);
+
+        for (Receipt receipt : receipts) {
+            if (receipt.getStoreId() == store.getId()) {
+                store.getReceipts().add(receipt);
+                ReceiptPrinter.printReceipt(receipt);
+            }
+        }
+
+        assertEquals(1, store.getReceipts().size());
     }
 
     @Test

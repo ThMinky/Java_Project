@@ -22,6 +22,16 @@ public class StoreService implements IStoreService {
 
     // Getters / Setters
     @Override
+    public int getId() {
+        return store.getId();
+    }
+
+    @Override
+    public String getName() {
+        return store.getName();
+    }
+
+    @Override
     public BigDecimal getRevenue() {
         return store.getRevenue();
     }

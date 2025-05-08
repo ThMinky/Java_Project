@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.util.*;
 
 public class Store {
+    private int id;
     private String name;
     private BigDecimal eatableMarkupPercentage;
     private BigDecimal nonEatableMarkupPercentage;
@@ -29,7 +30,8 @@ public class Store {
 
     private Map<CommodityCategory, BigDecimal> markupPercentages = new EnumMap<>(CommodityCategory.class);
 
-    public Store(String name, BigDecimal eatableMarkupPercentage, BigDecimal nonEatableMarkupPercentage, BigDecimal expiryDiscountPercentage, int expiryDiscountThresholdDays) {
+    public Store(int id, String name, BigDecimal eatableMarkupPercentage, BigDecimal nonEatableMarkupPercentage, BigDecimal expiryDiscountPercentage, int expiryDiscountThresholdDays) {
+        this.id = id;
         this.name = name;
         this.eatableMarkupPercentage = eatableMarkupPercentage;
         this.nonEatableMarkupPercentage = nonEatableMarkupPercentage;
@@ -42,6 +44,14 @@ public class Store {
     }
 
     // Getters and Setters
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public String getName() {
         return name;
     }

@@ -72,7 +72,7 @@ public class CashierService implements ICashierService {
         BigDecimal change = money.subtract(totalCost);
         store.setRevenue(store.getRevenue().add(totalCost));
 
-        Receipt receipt = generateReceipt(store, cashier, purchasedCommodities, totalCost, change);
+        Receipt receipt = generateReceipt(store, this, purchasedCommodities, totalCost, change);
         store.getReceipts().add(receipt);
         return receipt;
     }
@@ -141,12 +141,12 @@ public class CashierService implements ICashierService {
         }
     }
 
-    private Receipt generateReceipt(IStoreService store, Cashier cashier, List<CustomCommoditiesDataType> items,
+    private Receipt generateReceipt(IStoreService store, ICashierService cashier, List<CustomCommoditiesDataType> items,
                                     BigDecimal totalCost, BigDecimal change) {
         int receiptId = store.getReceiptCount() + 1;
         store.setReceiptCount(receiptId);
         LocalDateTime issued = LocalDateTime.now();
 
-        return new Receipt(receiptId, cashier, issued, items, totalCost, change);
+        return new Receipt(receiptId, store, cashier, issued, items, totalCost, change);
     }
 }

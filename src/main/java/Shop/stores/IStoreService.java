@@ -13,6 +13,10 @@ import java.util.Set;
 public interface IStoreService {
 
     // Getters / Setters
+    int getId();
+
+    String getName();
+
     BigDecimal getRevenue();
 
     void setRevenue(BigDecimal revenue);

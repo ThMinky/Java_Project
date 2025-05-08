@@ -1,7 +1,8 @@
 package Shop.receipts;
 
 import Shop.commodities.CustomCommoditiesDataType;
-import Shop.employees.Cashier;
+import Shop.employees.ICashierService;
+import Shop.stores.IStoreService;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -10,12 +11,15 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@JsonPropertyOrder({"id", "cashierName", "cashierId", "issuedDateTime", "purchasedCommodities", "totalCost", "change"})
+@JsonPropertyOrder({"id", "storeName", "storeId", "cashierName", "cashierId", "issuedDateTime", "purchasedCommodities", "totalCost", "change"})
 public class Receipt {
     private int id;
 
     @JsonIgnore
-    private Cashier cashier;
+    private ICashierService cashier;
+
+    @JsonIgnore
+    private IStoreService store;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime issuedDateTime;
@@ -25,9 +29,10 @@ public class Receipt {
     private BigDecimal totalCost;
     private BigDecimal change;
 
-    public Receipt(int id, Cashier cashier, LocalDateTime issuedDateTime, List<CustomCommoditiesDataType> soldCommodities,
+    public Receipt(int id, IStoreService store, ICashierService cashier, LocalDateTime issuedDateTime, List<CustomCommoditiesDataType> soldCommodities,
                    BigDecimal totalCost, BigDecimal change) {
         this.id = id;
+        this.store = store;
         this.cashier = cashier;
         this.issuedDateTime = issuedDateTime;
 
@@ -46,11 +51,11 @@ public class Receipt {
         this.id = id;
     }
 
-    public Cashier getCashier() {
+    public ICashierService getCashier() {
         return cashier;
     }
 
-    public void setCashier(Cashier cashier) {
+    public void setCashier(ICashierService cashier) {
         this.cashier = cashier;
     }
 
@@ -88,6 +93,14 @@ public class Receipt {
     // -----------------
 
     // Getters for JSON
+    public int getStoreId() {
+        return store.getId();
+    }
+
+    public String getStoreName() {
+        return store.getName();
+    }
+
     public int getCashierId() {
         return cashier.getId();
     }
