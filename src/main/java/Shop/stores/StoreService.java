@@ -3,12 +3,15 @@ package Shop.stores;
 import Shop.commodities.Commodity;
 import Shop.commodities.CustomCommoditiesDataType;
 import Shop.employees.ICashierService;
+import Shop.exceptions.CommodityNotFoundException;
+import Shop.receipts.Receipt;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Set;
 
 public class StoreService implements IStoreService {
     private final Store store;
@@ -17,31 +20,76 @@ public class StoreService implements IStoreService {
         this.store = store;
     }
 
+    // Getters / Setters
+    @Override
+    public BigDecimal getRevenue() {
+        return store.getRevenue();
+    }
+
+    @Override
+    public void setRevenue(BigDecimal revenue) {
+        store.setRevenue(revenue);
+    }
+
+    @Override
+    public List<Commodity> getAvailableCommodities() {
+        return store.getAvailableCommodities();
+    }
+
+    @Override
+    public List<Commodity> getDeliveredCommodities() {
+        return store.getDeliveredCommodities();
+    }
+
+    @Override
+    public List<CustomCommoditiesDataType> getSoldCommodities() {
+        return store.getSoldCommodities();
+    }
+
+    @Override
+    public Set<ICashierService> getCashiers() {
+        return store.getCashiers();
+    }
+
+    @Override
+    public Set<Receipt> getReceipts() {
+        return store.getReceipts();
+    }
+
+    @Override
+    public int getReceiptCount() {
+        return store.getReceiptCount();
+    }
+
+    @Override
+    public void setReceiptCount(int receiptCount) {
+        store.setReceiptCount(receiptCount);
+    }
+    // -----------------
+
     @Override
     public void addCommodity(Commodity commodity) {
         Commodity delivered = findCommodityById(store.getDeliveredCommodities(), commodity.getId());
+        Commodity available = findCommodityById(store.getAvailableCommodities(), commodity.getId());
 
         if (delivered != null) {
             delivered.setQuantity(delivered.getQuantity().add(commodity.getQuantity()));
+        } else {
+            store.getDeliveredCommodities().add(new Commodity(commodity)); // Make copy if needed
+        }
 
-            Commodity available = findCommodityById(store.getAvailableCommodities(), commodity.getId());
-            if (available != null) {
-                available.setQuantity(available.getQuantity().add(commodity.getQuantity()));
-            }
-
+        if (available != null) {
+            available.setQuantity(available.getQuantity().add(commodity.getQuantity()));
         } else {
             BigDecimal markupPercentage = store.getMarkupPercentages().getOrDefault(commodity.getCategory(), BigDecimal.ZERO);
 
             BigDecimal multiplier = BigDecimal.ONE.add(markupPercentage.divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP));
-
             BigDecimal newPrice = commodity.getSellingPrice().multiply(multiplier).setScale(2, RoundingMode.HALF_UP);
 
-            commodity.setSellingPrice(newPrice);
-
             Commodity availableCopy = new Commodity(commodity);
-            store.getAvailableCommodities().add(availableCopy);
+            availableCopy.setSellingPrice(newPrice);
 
-            store.getDeliveredCommodities().add(commodity);
+            store.getAvailableCommodities().add(availableCopy);
         }
     }
 
@@ -56,8 +104,8 @@ public class StoreService implements IStoreService {
     }
 
     @Override
-    public void applyExpiryDiscount(Commodity commodity) {
-        if (commodity.getExpiryDate() == null) return;
+    public Boolean applyExpiryDiscount(Commodity commodity) {
+        if (commodity.getExpiryDate() == null) return false;
 
         LocalDate today = LocalDate.now();
         long daysUntilExpiry = ChronoUnit.DAYS.between(today, commodity.getExpiryDate());
@@ -68,17 +116,30 @@ public class StoreService implements IStoreService {
             BigDecimal newPrice = commodity.getSellingPrice().subtract(discount).setScale(2, RoundingMode.HALF_UP);
 
             commodity.setSellingPrice(newPrice);
+            return true;
         }
+
+        return false;
     }
 
     @Override
-    public void checkForExpired(Commodity commodity) {
-        if (commodity.getExpiryDate() == null) return;
+    public Boolean checkForExpired(Commodity commodity) throws CommodityNotFoundException {
+        Commodity existingCommodity = store.getAvailableCommodities().stream().filter(c -> c.getId() == commodity.getId()).findFirst().orElse(null);
+
+        if (existingCommodity == null) {
+            throw new CommodityNotFoundException(commodity.getId());
+        }
+
+        if (commodity.getExpiryDate() == null) return false;
 
         LocalDate today = LocalDate.now();
-        if (commodity.getExpiryDate().isBefore(today)) {
+
+        if (!commodity.getExpiryDate().isAfter(today)) {
             store.getAvailableCommodities().removeIf(c -> c.getId() == commodity.getId());
+            return true;
         }
+
+        return false;
     }
 
 

@@ -20,9 +20,7 @@ public interface ICashierService {
     IStoreService getStore();
     // -----------------
 
-    Receipt sellCommodities(Cashier cashier, List<CustomCommoditiesDataType> cartCommodities, BigDecimal money)
+    Receipt sellCommodities(List<CustomCommoditiesDataType> cartCommodities, BigDecimal money)
             throws EmptyCartException, CommodityNotFoundException, InsufficientQuantityException,
             InsufficientFundsException, CashierNotHiredException;
-
-    void writeReceiptToJsonFile(Receipt receipt);
 }

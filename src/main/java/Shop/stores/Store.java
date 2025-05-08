@@ -29,7 +29,6 @@ public class Store {
 
     private Map<CommodityCategory, BigDecimal> markupPercentages = new EnumMap<>(CommodityCategory.class);
 
-    // Constructor
     public Store(String name, BigDecimal eatableMarkupPercentage, BigDecimal nonEatableMarkupPercentage, BigDecimal expiryDiscountPercentage, int expiryDiscountThresholdDays) {
         this.name = name;
         this.eatableMarkupPercentage = eatableMarkupPercentage;

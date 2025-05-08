@@ -3,14 +3,9 @@ package Shop.employees;
 import Shop.commodities.Commodity;
 import Shop.commodities.CustomCommoditiesDataType;
 import Shop.exceptions.*;
-import Shop.stores.IStoreService;
 import Shop.receipts.Receipt;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import Shop.stores.IStoreService;
 
-import java.io.File;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -46,46 +41,33 @@ public class CashierService implements ICashierService {
     // -----------------
 
     @Override
-    public Receipt sellCommodities(Cashier cashier, List<CustomCommoditiesDataType> cartCommodities, BigDecimal money)
+    public Receipt sellCommodities(List<CustomCommoditiesDataType> cartCommodities, BigDecimal money)
             throws EmptyCartException, CommodityNotFoundException, InsufficientQuantityException,
             InsufficientFundsException, CashierNotHiredException {
 
         IStoreService store = cashier.getStore();
 
-        if (!store.getCashiers().contains(cashier)) {
-            throw new CashierNotHiredException(cashier.getId());
-        }
-
-        if (cartCommodities.isEmpty()) {
-            throw new EmptyCartException();
-        }
+        validateCashier(store, cashier);
+        validateCart(cartCommodities);
 
         BigDecimal totalCost = BigDecimal.ZERO;
         List<CustomCommoditiesDataType> purchasedCommodities = new ArrayList<>();
 
-        for (CustomCommoditiesDataType cartCommodity : cartCommodities) {
-            Commodity available = findCommodityById(store, cartCommodity.getId());
+        for (CustomCommoditiesDataType cartItem : cartCommodities) {
+            Commodity available = findCommodityById(store, cartItem.getId());
+            validateStockAvailability(available, cartItem.getQuantity());
 
-            if (available.getQuantity() < cartCommodity.getQuantity()) {
-                throw new InsufficientQuantityException(available.getName(), available.getQuantity(), cartCommodity.getQuantity());
-            }
-
-            BigDecimal itemTotal = available.getPrice().multiply(
-                    new BigDecimal(cartCommodity.getQuantity()));
+            BigDecimal itemTotal = calculateItemTotal(available, cartItem.getQuantity());
             totalCost = totalCost.add(itemTotal);
 
-            updateAvailableCommodity(available, cartCommodity.getQuantity());
+            updateAvailableStock(available, cartItem.getQuantity());
+            CustomCommoditiesDataType purchasedItem = createPurchasedItem(available, cartItem.getQuantity());
+            purchasedCommodities.add(purchasedItem);
 
-            CustomCommoditiesDataType purchased = new CustomCommoditiesDataType(available.getId(), available.getName(),
-                    cartCommodity.getQuantity(), available.getPrice());
-            purchasedCommodities.add(purchased);
-
-            updateSoldCommodities(store, purchased);
+            updateSoldCommodities(store, purchasedItem);
         }
 
-        if (money.compareTo(totalCost) < 0) {
-            throw new InsufficientFundsException(totalCost, money);
-        }
+        validateFunds(money, totalCost);
 
         BigDecimal change = money.subtract(totalCost);
         store.setRevenue(store.getRevenue().add(totalCost));
@@ -95,8 +77,23 @@ public class CashierService implements ICashierService {
         return receipt;
     }
 
+    private void validateCashier(IStoreService store, Cashier cashier) throws CashierNotHiredException {
+        boolean isHired = store.getCashiers().stream()
+                .anyMatch(c -> c.getId() == cashier.getId());
+
+        if (!isHired) {
+            throw new CashierNotHiredException(cashier.getId());
+        }
+    }
+
+    private void validateCart(List<CustomCommoditiesDataType> cartCommodities) throws EmptyCartException {
+        if (cartCommodities.isEmpty()) {
+            throw new EmptyCartException();
+        }
+    }
+
     private Commodity findCommodityById(IStoreService store, int id) throws CommodityNotFoundException {
-        for (ICommodity available : store.getAvailableCommodities()) {
+        for (Commodity available : store.getAvailableCommodities()) {
             if (available.getId() == id) {
                 return available;
             }
@@ -104,64 +101,52 @@ public class CashierService implements ICashierService {
         throw new CommodityNotFoundException(id);
     }
 
-    private void updateAvailableCommodity(Commodity commodity, int quantityPurchased) {
-        commodity.setQuantity(commodity.getQuantity() - quantityPurchased);
+    private void validateStockAvailability(Commodity commodity, BigDecimal requestedQuantity)
+            throws InsufficientQuantityException {
+        if (commodity.getQuantity().compareTo(requestedQuantity) < 0) {
+            throw new InsufficientQuantityException(commodity.getName(), commodity.getQuantity(), requestedQuantity);
+        }
+    }
+
+    private BigDecimal calculateItemTotal(Commodity commodity, BigDecimal quantity) {
+        return commodity.getSellingPrice().multiply(quantity);
+    }
+
+    private void updateAvailableStock(Commodity commodity, BigDecimal quantityPurchased) {
+        commodity.setQuantity(commodity.getQuantity().subtract(quantityPurchased));
+    }
+
+    private CustomCommoditiesDataType createPurchasedItem(Commodity commodity, BigDecimal quantity) {
+        return new CustomCommoditiesDataType(
+                commodity.getId(),
+                commodity.getName(),
+                quantity,
+                commodity.getSellingPrice()
+        );
     }
 
     private void updateSoldCommodities(IStoreService store, CustomCommoditiesDataType purchased) {
         for (CustomCommoditiesDataType sold : store.getSoldCommodities()) {
             if (sold.getId() == purchased.getId()) {
-                sold.setQuantity(sold.getQuantity() + purchased.getQuantity());
+                sold.setQuantity(sold.getQuantity().add(purchased.getQuantity()));
                 return;
             }
         }
-        store.getSoldCommodities().add(
-                new CustomCommoditiesDataType(purchased.getId(), purchased.getName(), purchased.getQuantity(), purchased.getPrice()));
+        store.getSoldCommodities().add(purchased);
     }
 
-    private Receipt generateReceipt(IStoreService store, Cashier cashier, List<CustomCommoditiesDataType> purchasedCommodities,
-                                     BigDecimal totalCost, BigDecimal change) {
+    private void validateFunds(BigDecimal money, BigDecimal totalCost) throws InsufficientFundsException {
+        if (money.compareTo(totalCost) < 0) {
+            throw new InsufficientFundsException(totalCost, money);
+        }
+    }
+
+    private Receipt generateReceipt(IStoreService store, Cashier cashier, List<CustomCommoditiesDataType> items,
+                                    BigDecimal totalCost, BigDecimal change) {
         int receiptId = store.getReceiptCount() + 1;
         store.setReceiptCount(receiptId);
-        LocalDateTime now = LocalDateTime.now();
-        return new Receipt(receiptId, cashier, now, purchasedCommodities, totalCost, change);
-    }
+        LocalDateTime issued = LocalDateTime.now();
 
-    @Override
-    public void writeReceiptToJsonFile(Receipt receipt) {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        mapper.enable(SerializationFeature.INDENT_OUTPUT);
-
-        String folderPath = "receipts";
-        String fileName = "receipt_" + receipt.getId() + ".json";
-
-        File directory = new File(folderPath);
-        if (!directory.exists()) {
-            directory.mkdirs();
-        }
-
-        File file = new File(directory, fileName);
-        try {
-            mapper.writeValue(file, receipt);
-            System.out.println("Receipt written to: " + file.getAbsolutePath());
-        } catch (IOException e) {
-            System.err.println("Failed to write receipt: " + e.getMessage());
-        }
-    }
-
-
-    // Equals and hashCode implementation
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        CashierService that = (CashierService) o;
-        return this.cashier.getId() == that.cashier.getId();
-    }
-
-    @Override
-    public int hashCode() {
-        return Integer.hashCode(cashier.getId());
+        return new Receipt(receiptId, cashier, issued, items, totalCost, change);
     }
 }

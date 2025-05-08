@@ -1,24 +1,20 @@
 package org.example;
 
+import Shop.commodities.Commodity;
+import Shop.commodities.CommodityCategory;
+import Shop.commodities.CustomCommoditiesDataType;
+import Shop.employees.Cashier;
+import Shop.employees.CashierService;
+import Shop.employees.ICashierService;
 import Shop.exceptions.*;
-
+import Shop.helpers.ReceiptFileManager;
 import Shop.helpers.ReceiptPrinter;
 import Shop.receipts.Receipt;
 import Shop.stores.IStoreService;
 import Shop.stores.Store;
-
-import Shop.employees.ICashierService;
-import Shop.employees.Cashier;
-
-import Shop.commodities.Commodity;
-import Shop.commodities.CommodityCategory;
-import Shop.commodities.CustomCommoditiesDataType;
-
-// Generic
+import Shop.stores.StoreService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -26,92 +22,103 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 public class TestService {
 
+    Store storeData;
     IStoreService store;
+
+    Cashier cashierData;
     ICashierService cashier;
+
     Commodity commodity;
+
     List<CustomCommoditiesDataType> cart;
 
     @BeforeEach
     public void setUp() {
-        store = new Store("Store", BigDecimal.valueOf(10), BigDecimal.valueOf(10), BigDecimal.valueOf(10), 3);
+        storeData = new Store("Store", BigDecimal.valueOf(10), BigDecimal.valueOf(10), BigDecimal.valueOf(10), 3);
+        store = new StoreService(storeData);
 
-        cashier = new Cashier("Bob", store.getNextCashierId(), BigDecimal.valueOf(1800), store);
-        assertDoesNotThrow(() -> store.hireCashier(cashier));
+        cashierData = new Cashier("Bob", store.getNextCashierId(), BigDecimal.valueOf(1800), store);
+        cashier = new CashierService(cashierData);
+        store.hireCashier(cashier);
 
-        commodity = new Commodity(store.getNextCommodityId(), "Apple", CommodityCategory.EATABLE, BigDecimal.valueOf(1),
-                BigDecimal.valueOf(2), 10, LocalDate.now().plusDays(5), false);
+        commodity = new Commodity(store.getNextCommodityId(), "Apple", CommodityCategory.EATABLE,
+                BigDecimal.valueOf(1), BigDecimal.valueOf(2), BigDecimal.valueOf(10), LocalDate.now().plusDays(5));
         store.addCommodity(commodity);
 
         cart = new ArrayList<>();
-        cart.add(new CustomCommoditiesDataType(commodity.getId(), commodity.getName(), 1, commodity.getPrice()));
+        cart.add(new CustomCommoditiesDataType(commodity.getId(), commodity.getName(), BigDecimal.valueOf(1), commodity.getSellingPrice()));
     }
 
     @Test
     public void hiringCashier() {
-        ICashierService newCashier = new Cashier("Bob", store.getNextCashierId(), BigDecimal.valueOf(1500), store);
+        Cashier newCashierData = new Cashier("Bob", store.getNextCashierId(), BigDecimal.valueOf(1500), store);
+        ICashierService newCashier = new CashierService(newCashierData);
 
-        try {
-            store.hireCashier(newCashier);
-        } catch (CashierAlreadyExistsException e) {
-            fail("Cashier Already Exists Exception! " + e);
-        }
+        store.hireCashier(newCashier);
 
         assertTrue(store.getCashiers().contains(newCashier));
     }
 
     @Test
     public void addingCommodityToStore() {
-        ICommodity newCommodity = new Commodity(store.getNextCommodityId(), "Milk", CommodityCategory.EATABLE, BigDecimal.valueOf(1),
-                BigDecimal.valueOf(2), 10, LocalDate.now().plusDays(5), false);
+        Commodity newCommodity = new Commodity(store.getNextCommodityId(), "Milk", CommodityCategory.EATABLE,
+                BigDecimal.valueOf(1), BigDecimal.valueOf(2), BigDecimal.valueOf(10), LocalDate.now().plusDays(5));
         store.addCommodity(newCommodity);
 
         assertEquals(2, store.getAvailableCommodities().size());
-        assertTrue(store.getAvailableCommodities().contains(commodity));
+        assertTrue(store.getAvailableCommodities().stream().anyMatch(c -> c.getId() == commodity.getId()));
 
         assertEquals(2, store.getDeliveredCommodities().size());
-        assertTrue(store.getAvailableCommodities().contains(commodity));
+        assertTrue(store.getDeliveredCommodities().stream().anyMatch(c -> c.getId() == commodity.getId()));
     }
 
     @Test
     public void addingAlreadyExistingCommodityToStore() {
         store.addCommodity(commodity);
 
-        assertEquals(20, store.getAvailableCommodities().getFirst().getQuantity());
-        assertEquals(20, store.getDeliveredCommodities().getFirst().getQuantity());
+        assertEquals(BigDecimal.valueOf(20), store.getAvailableCommodities().getFirst().getQuantity());
+        assertEquals(BigDecimal.valueOf(20), store.getDeliveredCommodities().getFirst().getQuantity());
     }
 
 
     @Test
     public void checkAndSetExpiryStatus() {
-        ICommodity expiringToday = new Commodity(3, "Apple", CommodityCategory.EATABLE, BigDecimal.valueOf(1), BigDecimal.valueOf(2),
-                1, LocalDate.now(), false);
+        Commodity expiringToday = new Commodity(3, "Apple", CommodityCategory.EATABLE,
+                BigDecimal.valueOf(1), BigDecimal.valueOf(2), BigDecimal.valueOf(1), LocalDate.now());
+        store.addCommodity(expiringToday);
 
-        store.checkForExpired(expiringToday);
+        try {
+            boolean isExpired = store.checkForExpired(expiringToday);
 
-        assertTrue(expiringToday.getIsExpired());
+            assertTrue(isExpired);
+        } catch (CommodityNotFoundException e) {
+            fail("Commodity was not found in the store: " + e.getMessage());
+        }
     }
 
     @Test
     public void applyExpiryDiscount() {
-        ICommodity discountableCommodity = new Commodity(2, "Apple", CommodityCategory.EATABLE, BigDecimal.valueOf(10), BigDecimal.valueOf(10),
-                1, LocalDate.now().plusDays(1), false);
+        Commodity discountableCommodity = new Commodity(2, "Apple", CommodityCategory.EATABLE,
+                BigDecimal.valueOf(10), BigDecimal.valueOf(10), BigDecimal.valueOf(1), LocalDate.now().plusDays(1));
         store.addCommodity(discountableCommodity);
 
         store.applyExpiryDiscount(discountableCommodity);
 
-        BigDecimal expectedPrice = BigDecimal.valueOf(9.90).setScale(2, RoundingMode.HALF_UP);
-        assertEquals(expectedPrice, discountableCommodity.getPrice());
+        BigDecimal expectedPrice = BigDecimal.valueOf(9).setScale(2, RoundingMode.HALF_UP);
+        assertEquals(expectedPrice, discountableCommodity.getSellingPrice());
     }
 
     @Test
     public void sellingCommodities() {
-        ICommodity newCommodity = new Commodity(store.getNextCommodityId(), "Soap", CommodityCategory.NONEATABLE, BigDecimal.valueOf(2), BigDecimal.valueOf(4),
-                5, LocalDate.now().plusDays(100), false);
+        Commodity newCommodity = new Commodity(store.getNextCommodityId(), "Soap", CommodityCategory.NONEATABLE,
+                BigDecimal.valueOf(2), BigDecimal.valueOf(4), BigDecimal.valueOf(5), LocalDate.now().plusDays(100));
         store.addCommodity(newCommodity);
 
-        cart.add(new CustomCommoditiesDataType(newCommodity.getId(), newCommodity.getName(), 2, newCommodity.getPrice()));
+        cart.add(new CustomCommoditiesDataType(newCommodity.getId(), newCommodity.getName(), BigDecimal.valueOf(2), newCommodity.getSellingPrice()));
 
         try {
             cashier.sellCommodities(cart, BigDecimal.valueOf(20));
@@ -127,8 +134,8 @@ public class TestService {
             fail("Insufficient Funds Exception! " + e.getMessage());
         }
 
-        assertEquals(9, store.getAvailableCommodities().get(0).getQuantity());
-        assertEquals(3, store.getAvailableCommodities().get(1).getQuantity());
+        assertEquals(BigDecimal.valueOf(9), store.getAvailableCommodities().get(0).getQuantity());
+        assertEquals(BigDecimal.valueOf(3), store.getAvailableCommodities().get(1).getQuantity());
     }
 
     @Test
@@ -150,7 +157,7 @@ public class TestService {
         }
 
         if (receipt != null) {
-            cashier.writeReceiptToJsonFile(receipt);
+            ReceiptFileManager.writeToFile(receipt);
             ReceiptPrinter.printReceipt(receipt);
         }
     }
@@ -159,7 +166,7 @@ public class TestService {
     public void deliveredCommoditiesRemainUnchangedAfterSelling() {
         assertDoesNotThrow(() -> cashier.sellCommodities(cart, BigDecimal.valueOf(20)));
 
-        assertEquals(10, store.getDeliveredCommodities().getFirst().getQuantity());
+        assertEquals(BigDecimal.valueOf(10), store.getDeliveredCommodities().getFirst().getQuantity());
     }
 
 
@@ -173,24 +180,30 @@ public class TestService {
 
     @Test
     public void calculateMonthlySalaries() {
-        ICashierService cashier2 = new Cashier("BobTheBuilder", store.getNextCashierId(), BigDecimal.valueOf(2000), store);
-        assertDoesNotThrow(() -> store.hireCashier(cashier2));
+        Cashier newCashierData = new Cashier("BobTheBuilder", store.getNextCashierId(), BigDecimal.valueOf(2000), store);
+        ICashierService newCashier = new CashierService(newCashierData);
 
-        assertEquals(BigDecimal.valueOf(3800), store.calculateMonthlySalaries());
+        assertDoesNotThrow(() -> store.hireCashier(newCashier));
+
+        BigDecimal expected = BigDecimal.valueOf(3800);
+        BigDecimal actual = store.calculateMonthlySalaries();
+
+        assertEquals(0, actual.compareTo(expected));
     }
 
     @Test
     public void calculatePureRevenue() {
-        ICommodity newCommodity = new Commodity(store.getNextCommodityId(), "GoldBar", CommodityCategory.NONEATABLE, BigDecimal.valueOf(0),
-                BigDecimal.valueOf(2000), 1, null, false);
-
+        Commodity newCommodity = new Commodity(store.getNextCommodityId(), "GoldBar", CommodityCategory.NONEATABLE,
+                BigDecimal.valueOf(0), BigDecimal.valueOf(2000), BigDecimal.valueOf(1), null);
         store.addCommodity(newCommodity);
 
-        cart.add(new CustomCommoditiesDataType(newCommodity.getId(), newCommodity.getName(), 1, newCommodity.getPrice()));
+        cart.add(new CustomCommoditiesDataType(newCommodity.getId(), newCommodity.getName(), BigDecimal.valueOf(1), newCommodity.getSellingPrice()));
 
         assertDoesNotThrow(() -> cashier.sellCommodities(cart, BigDecimal.valueOf(20000)));
 
-        BigDecimal value = BigDecimal.valueOf(392.20).setScale(2, RoundingMode.HALF_UP);
-        assertEquals(value, store.calculatePureRevenue());
+        BigDecimal expected = BigDecimal.valueOf(392.20);
+        BigDecimal actual = store.calculatePureRevenue();
+
+        assertEquals(0, actual.compareTo(expected));
     }
 }
