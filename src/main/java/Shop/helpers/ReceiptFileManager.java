@@ -2,6 +2,7 @@ package Shop.helpers;
 
 import Shop.commodities.CustomCommoditiesDataType;
 import Shop.employees.ICashierService;
+import Shop.exceptions.fileexceptions.*;
 import Shop.receipts.Receipt;
 import Shop.stores.IStoreService;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -46,7 +47,11 @@ public class ReceiptFileManager {
         }
     }
 
-    public static Set<Receipt> readReceiptsFromFiles(Set<IStoreService> stores) {
+    public static Set<Receipt> readReceiptsFromFiles(Set<IStoreService> stores)
+            throws ReceiptsDirectoryNotFoundException, NoReceiptFilesFoundException,
+            StoreNotFoundException, CashierNotFoundException,
+            ReceiptParseException, NoValidReceiptsException {
+
         Set<Receipt> receipts = new HashSet<>();
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
@@ -54,14 +59,12 @@ public class ReceiptFileManager {
 
         File receiptDir = new File("receipts");
         if (!receiptDir.exists() || !receiptDir.isDirectory()) {
-            System.err.println("Receipts directory not found.");
-            return receipts;
+            throw new ReceiptsDirectoryNotFoundException();
         }
 
         File[] files = receiptDir.listFiles((dir, name) -> name.endsWith(".json"));
         if (files == null || files.length == 0) {
-            System.out.println("No receipt files found in the receipts directory.");
-            return receipts;
+            throw new NoReceiptFilesFoundException();
         }
 
         for (File file : files) {
@@ -78,30 +81,28 @@ public class ReceiptFileManager {
 
                 IStoreService store = findStoreById(stores, storeId);
                 if (store == null) {
-                    System.err.println("Store ID " + storeId + " not found.");
-                    continue;
+                    throw new StoreNotFoundException(storeId);
                 }
 
                 ICashierService cashier = findCashierById(store.getCashiers(), cashierId);
                 if (cashier == null) {
-                    System.err.println("Cashier ID " + cashierId + " not found in store ID " + storeId);
-                    continue;
+                    throw new CashierNotFoundException(cashierId, storeId);
                 }
 
-                Receipt receipt = new Receipt(id, store, cashier, issuedDateTime, commodities, totalCost, change);
-                receipts.add(receipt);
+                receipts.add(new Receipt(id, store, cashier, issuedDateTime, commodities, totalCost, change));
 
             } catch (IOException e) {
-                System.err.println("Failed to parse receipt: " + e.getMessage());
+                throw new ReceiptParseException(file.getName(), e);
             }
         }
 
         if (receipts.isEmpty()) {
-            System.out.println("No valid receipts were loaded from files.");
+            throw new NoValidReceiptsException();
         }
 
         return receipts;
     }
+
 
     private static IStoreService findStoreById(Set<IStoreService> stores, int id) {
         return stores.stream().filter(s -> s.getId() == id).findFirst().orElse(null);

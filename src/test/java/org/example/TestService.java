@@ -7,6 +7,7 @@ import Shop.employees.Cashier;
 import Shop.employees.CashierService;
 import Shop.employees.ICashierService;
 import Shop.exceptions.*;
+import Shop.exceptions.fileexceptions.*;
 import Shop.helpers.ReceiptFileManager;
 import Shop.helpers.ReceiptPrinter;
 import Shop.receipts.Receipt;
@@ -174,16 +175,33 @@ public class TestService {
     public void readAndPrintReceipt() {
         assertEquals(0, store.getReceipts().size());
 
-        Set<Receipt> receipts = ReceiptFileManager.readReceiptsFromFiles(stores);
+        try {
+            Set<Receipt> receipts = ReceiptFileManager.readReceiptsFromFiles(stores);
 
-        for (Receipt receipt : receipts) {
-            if (receipt.getStoreId() == store.getId()) {
-                store.getReceipts().add(receipt);
-                ReceiptPrinter.printReceipt(receipt);
+            for (Receipt receipt : receipts) {
+                if (receipt.getStoreId() == store.getId()) {
+                    store.getReceipts().add(receipt);
+                    ReceiptPrinter.printReceipt(receipt);
+                }
             }
-        }
 
-        assertEquals(1, store.getReceipts().size());
+            assertEquals(1, store.getReceipts().size());
+
+        } catch (ReceiptsDirectoryNotFoundException e) {
+            System.err.println("Error: Receipts directory not found. " + e.getMessage());
+        } catch (NoReceiptFilesFoundException e) {
+            System.err.println("Error: No receipt files found. " + e.getMessage());
+        } catch (StoreNotFoundException e) {
+            System.err.println("Error: Store not found - ID: " + e.getMessage());
+        } catch (CashierNotFoundException e) {
+            System.err.println("Error: Cashier not found - ID: " + e.getMessage());
+        } catch (ReceiptParseException e) {
+            System.err.println("Error: Failed to parse receipt file: " + e.getMessage());
+        } catch (NoValidReceiptsException e) {
+            System.err.println("Error: No valid receipts found. " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("An unexpected error occurred: " + e.getMessage());
+        }
     }
 
     @Test

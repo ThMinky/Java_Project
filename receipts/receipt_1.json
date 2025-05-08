@@ -4,7 +4,7 @@
   "storeId" : 1,
   "cashierName" : "Bob",
   "cashierId" : 1,
-  "issuedDateTime" : "2025-05-09 00:56:01",
+  "issuedDateTime" : "2025-05-09 01:10:26",
   "purchasedCommodities" : [ {
     "id" : 1,
     "name" : "Apple",
