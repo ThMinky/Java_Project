@@ -1,4 +1,4 @@
-package Shop.Exceptions;
+package Shop.exceptions;
 
 public class CashierNotHiredException extends Exception {
     public CashierNotHiredException(int cashierId) {

@@ -1,21 +1,17 @@
-package Shop.transactions;
+package Shop.receipts;
 
+import Shop.commodities.CustomCommoditiesDataType;
 import Shop.employees.Cashier;
-
-import Shop.Commodity.CustomCommoditiesDataType;
-
-// Generic
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
 @JsonPropertyOrder({"id", "cashierName", "cashierId", "issuedDateTime", "purchasedCommodities", "totalCost", "change"})
-public class Receipt implements IReceipt {
+public class Receipt {
     private int id;
 
     @JsonIgnore
@@ -41,9 +37,7 @@ public class Receipt implements IReceipt {
         this.change = change;
     }
 
-    // -----------------------------------------------------------------------------------------------------------------
-    // --- Getters / Setters ---
-    @Override
+    // Getters and Setters
     public int getId() {
         return id;
     }
@@ -51,7 +45,6 @@ public class Receipt implements IReceipt {
     public void setId(int id) {
         this.id = id;
     }
-
 
     public Cashier getCashier() {
         return cashier;
@@ -61,7 +54,6 @@ public class Receipt implements IReceipt {
         this.cashier = cashier;
     }
 
-
     public LocalDateTime getIssuedDateTime() {
         return issuedDateTime;
     }
@@ -69,7 +61,6 @@ public class Receipt implements IReceipt {
     public void setIssuedDateTime(LocalDateTime issuedDateTime) {
         this.issuedDateTime = issuedDateTime;
     }
-
 
     public List<CustomCommoditiesDataType> getPurchasedCommodities() {
         return purchasedCommodities;
@@ -79,7 +70,6 @@ public class Receipt implements IReceipt {
         this.purchasedCommodities = purchasedCommodities;
     }
 
-
     public BigDecimal getTotalCost() {
         return totalCost;
     }
@@ -88,7 +78,6 @@ public class Receipt implements IReceipt {
         this.totalCost = totalCost;
     }
 
-
     public BigDecimal getChange() {
         return change;
     }
@@ -96,40 +85,14 @@ public class Receipt implements IReceipt {
     public void setChange(BigDecimal change) {
         this.change = change;
     }
-    // -----------------------------------------------------------------------------------------------------------------
+    // -----------------
 
-    // --- Getters For JSON ---
+    // Getters for JSON
     public int getCashierId() {
         return cashier.getId();
     }
 
     public String getCashierName() {
         return cashier.getName();
-    }
-
-    // --- Functions ---
-    @Override
-    public void printReceipt() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-        System.out.println("=== RECEIPT ===");
-        System.out.println("Receipt ID: " + id);
-        System.out.println("Cashier: " + cashier.getName());
-
-        System.out.println("Date: " + issuedDateTime.format(formatter));
-
-        System.out.println("----------------------------");
-
-        for (CustomCommoditiesDataType item : purchasedCommodities) {
-            BigDecimal totalItemPrice = item.getPrice().multiply(new BigDecimal(item.getQuantity()));
-
-            System.out.printf("%s - x%d - %.2f\n", item.getName(), item.getQuantity(), totalItemPrice);
-        }
-
-        System.out.println("----------------------------");
-
-        System.out.printf("Total: %.2f\n", totalCost);
-        System.out.printf("Change: %.2f\n", change);
-        System.out.println("============================");
     }
 }

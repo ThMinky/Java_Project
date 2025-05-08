@@ -1,4 +1,4 @@
-package Shop.Exceptions;
+package Shop.exceptions;
 
 public class InsufficientQuantityException extends Exception {
     public InsufficientQuantityException(String commodityName, int availableQuantity, int wantedQuantity) {

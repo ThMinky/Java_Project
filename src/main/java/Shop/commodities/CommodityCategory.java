@@ -1,4 +1,4 @@
-package Shop.Commodity;
+package Shop.commodities;
 
 public enum CommodityCategory {
     EATABLE, NONEATABLE

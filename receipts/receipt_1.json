@@ -1,0 +1,14 @@
+{
+  "id" : 1,
+  "cashierName" : "Bob",
+  "cashierId" : 1,
+  "issuedDateTime" : "2025-05-08 10:32:11",
+  "purchasedCommodities" : [ {
+    "id" : 1,
+    "name" : "Apple",
+    "quantity" : 1,
+    "price" : 2.20
+  } ],
+  "totalCost" : 2.20,
+  "change" : 12.80
+}

@@ -1,23 +1,21 @@
-package Shop.Commodity;
+package Shop.commodities;
 
-// Generic
 import java.math.BigDecimal;
 
 public class CustomCommoditiesDataType {
     private int id;
     private String name;
-    private int quantity;
+    private BigDecimal quantity;
     private BigDecimal price;
 
-    public CustomCommoditiesDataType(int id, String name, int quantity, BigDecimal price) {
+    public CustomCommoditiesDataType(int id, String name, BigDecimal quantity, BigDecimal price) {
         this.id = id;
         this.name = name;
         this.quantity = quantity;
         this.price = price;
     }
 
-    // -----------------------------------------------------------------------------------------------------------------
-    // --- Getters / Setters ---
+    // Getters / Setters
     public int getId() {
         return id;
     }
@@ -26,15 +24,15 @@ public class CustomCommoditiesDataType {
         return name;
     }
 
-    public int getQuantity() {
+    public BigDecimal getQuantity() {
         return quantity;
     }
-    public void setQuantity(int quantity) {
+    public void setQuantity(BigDecimal quantity) {
         this.quantity = quantity;
     }
 
     public BigDecimal getPrice() {
         return price;
     }
-    // -----------------------------------------------------------------------------------------------------------------
+    // -----------------
 }

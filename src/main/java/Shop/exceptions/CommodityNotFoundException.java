@@ -1,4 +1,4 @@
-package Shop.Exceptions;
+package Shop.exceptions;
 
 public class CommodityNotFoundException extends Exception {
     public CommodityNotFoundException(int commodityId) {

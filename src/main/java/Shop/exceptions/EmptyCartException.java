@@ -1,4 +1,4 @@
-package Shop.Exceptions;
+package Shop.exceptions;
 
 public class EmptyCartException extends Exception {
   public EmptyCartException() {

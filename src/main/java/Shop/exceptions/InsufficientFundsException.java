@@ -1,4 +1,4 @@
-package Shop.Exceptions;
+package Shop.exceptions;
 
 import java.math.BigDecimal;
 

@@ -1,19 +1,18 @@
 package org.example;
 
-import Shop.Exceptions.*;
+import Shop.exceptions.*;
 
-import Shop.Store.IStore;
-import Shop.Store.Store;
+import Shop.helpers.ReceiptPrinter;
+import Shop.receipts.Receipt;
+import Shop.stores.IStoreService;
+import Shop.stores.Store;
 
-import Shop.employees.ICashier;
+import Shop.employees.ICashierService;
 import Shop.employees.Cashier;
 
-import Shop.Commodity.ICommodity;
-import Shop.Commodity.Commodity;
-import Shop.Commodity.CommodityCategory;
-import Shop.Commodity.CustomCommoditiesDataType;
-
-import Shop.transactions.IReceipt;
+import Shop.commodities.Commodity;
+import Shop.commodities.CommodityCategory;
+import Shop.commodities.CustomCommoditiesDataType;
 
 // Generic
 import org.junit.jupiter.api.BeforeEach;
@@ -29,9 +28,9 @@ import java.util.List;
 
 public class TestService {
 
-    IStore store;
-    ICashier cashier;
-    ICommodity commodity;
+    IStoreService store;
+    ICashierService cashier;
+    Commodity commodity;
     List<CustomCommoditiesDataType> cart;
 
     @BeforeEach
@@ -51,7 +50,7 @@ public class TestService {
 
     @Test
     public void hiringCashier() {
-        ICashier newCashier = new Cashier("Bob", store.getNextCashierId(), BigDecimal.valueOf(1500), store);
+        ICashierService newCashier = new Cashier("Bob", store.getNextCashierId(), BigDecimal.valueOf(1500), store);
 
         try {
             store.hireCashier(newCashier);
@@ -89,7 +88,7 @@ public class TestService {
         ICommodity expiringToday = new Commodity(3, "Apple", CommodityCategory.EATABLE, BigDecimal.valueOf(1), BigDecimal.valueOf(2),
                 1, LocalDate.now(), false);
 
-        store.checkAndSetExpiryStatus(expiringToday);
+        store.checkForExpired(expiringToday);
 
         assertTrue(expiringToday.getIsExpired());
     }
@@ -134,7 +133,7 @@ public class TestService {
 
     @Test
     public void printingAndSavingReceipt() {
-        IReceipt receipt = null;
+        Receipt receipt = null;
 
         try {
             receipt = cashier.sellCommodities(cart, BigDecimal.valueOf(15));
@@ -152,7 +151,7 @@ public class TestService {
 
         if (receipt != null) {
             cashier.writeReceiptToJsonFile(receipt);
-            receipt.printReceipt();
+            ReceiptPrinter.printReceipt(receipt);
         }
     }
 
@@ -174,7 +173,7 @@ public class TestService {
 
     @Test
     public void calculateMonthlySalaries() {
-        ICashier cashier2 = new Cashier("BobTheBuilder", store.getNextCashierId(), BigDecimal.valueOf(2000), store);
+        ICashierService cashier2 = new Cashier("BobTheBuilder", store.getNextCashierId(), BigDecimal.valueOf(2000), store);
         assertDoesNotThrow(() -> store.hireCashier(cashier2));
 
         assertEquals(BigDecimal.valueOf(3800), store.calculateMonthlySalaries());
