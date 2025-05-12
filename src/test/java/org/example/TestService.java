@@ -89,8 +89,8 @@ public class TestService {
     public void addingAlreadyExistingCommodityToStore() {
         store.addCommodity(commodity);
 
-        assertEquals(BigDecimal.valueOf(20), store.getAvailableCommodities().getFirst().getQuantity());
-        assertEquals(BigDecimal.valueOf(20), store.getDeliveredCommodities().getFirst().getQuantity());
+        assertEquals(BigDecimal.valueOf(20), store.getAvailableCommodities().get(0).getQuantity());
+        assertEquals(BigDecimal.valueOf(20), store.getDeliveredCommodities().get(0).getQuantity());
     }
 
 
@@ -208,7 +208,7 @@ public class TestService {
     public void deliveredCommoditiesRemainUnchangedAfterSelling() {
         assertDoesNotThrow(() -> cashier.sellCommodities(cart, BigDecimal.valueOf(20)));
 
-        assertEquals(BigDecimal.valueOf(10), store.getDeliveredCommodities().getFirst().getQuantity());
+        assertEquals(BigDecimal.valueOf(10), store.getDeliveredCommodities().get(0).getQuantity());
     }
 
 
@@ -248,4 +248,5 @@ public class TestService {
 
         assertEquals(0, actual.compareTo(expected));
     }
+
 }
