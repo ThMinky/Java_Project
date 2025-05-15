@@ -1,4 +1,4 @@
-package Shop.employees;
+package Shop.cashiers;
 
 import Shop.commodities.Commodity;
 import Shop.commodities.CustomCommoditiesDataType;
@@ -77,7 +77,8 @@ public class CashierService implements ICashierService {
         return receipt;
     }
 
-    private void validateCashier(IStoreService store, Cashier cashier) throws CashierNotHiredException {
+    // sellCommodities helpers
+    public void validateCashier(IStoreService store, Cashier cashier) throws CashierNotHiredException {
         boolean isHired = store.getCashiers().stream()
                 .anyMatch(c -> c.getId() == cashier.getId());
 
@@ -86,13 +87,13 @@ public class CashierService implements ICashierService {
         }
     }
 
-    private void validateCart(List<CustomCommoditiesDataType> cartCommodities) throws EmptyCartException {
+    public void validateCart(List<CustomCommoditiesDataType> cartCommodities) throws EmptyCartException {
         if (cartCommodities.isEmpty()) {
             throw new EmptyCartException();
         }
     }
 
-    private Commodity findCommodityById(IStoreService store, int id) throws CommodityNotFoundException {
+    public Commodity findCommodityById(IStoreService store, int id) throws CommodityNotFoundException {
         for (Commodity available : store.getAvailableCommodities()) {
             if (available.getId() == id) {
                 return available;
@@ -101,22 +102,22 @@ public class CashierService implements ICashierService {
         throw new CommodityNotFoundException(id);
     }
 
-    private void validateStockAvailability(Commodity commodity, BigDecimal requestedQuantity)
+    public void validateStockAvailability(Commodity commodity, BigDecimal requestedQuantity)
             throws InsufficientQuantityException {
         if (commodity.getQuantity().compareTo(requestedQuantity) < 0) {
             throw new InsufficientQuantityException(commodity.getName(), commodity.getQuantity(), requestedQuantity);
         }
     }
 
-    private BigDecimal calculateItemTotal(Commodity commodity, BigDecimal quantity) {
+    public BigDecimal calculateItemTotal(Commodity commodity, BigDecimal quantity) {
         return commodity.getSellingPrice().multiply(quantity);
     }
 
-    private void updateAvailableStock(Commodity commodity, BigDecimal quantityPurchased) {
+    public void updateAvailableStock(Commodity commodity, BigDecimal quantityPurchased) {
         commodity.setQuantity(commodity.getQuantity().subtract(quantityPurchased));
     }
 
-    private CustomCommoditiesDataType createPurchasedItem(Commodity commodity, BigDecimal quantity) {
+    public CustomCommoditiesDataType createPurchasedItem(Commodity commodity, BigDecimal quantity) {
         return new CustomCommoditiesDataType(
                 commodity.getId(),
                 commodity.getName(),
@@ -125,7 +126,7 @@ public class CashierService implements ICashierService {
         );
     }
 
-    private void updateSoldCommodities(IStoreService store, CustomCommoditiesDataType purchased) {
+    public void updateSoldCommodities(IStoreService store, CustomCommoditiesDataType purchased) {
         for (CustomCommoditiesDataType sold : store.getSoldCommodities()) {
             if (sold.getId() == purchased.getId()) {
                 sold.setQuantity(sold.getQuantity().add(purchased.getQuantity()));
@@ -135,13 +136,13 @@ public class CashierService implements ICashierService {
         store.getSoldCommodities().add(purchased);
     }
 
-    private void validateFunds(BigDecimal money, BigDecimal totalCost) throws InsufficientFundsException {
+    public void validateFunds(BigDecimal money, BigDecimal totalCost) throws InsufficientFundsException {
         if (money.compareTo(totalCost) < 0) {
             throw new InsufficientFundsException(totalCost, money);
         }
     }
 
-    private Receipt generateReceipt(IStoreService store, ICashierService cashier, List<CustomCommoditiesDataType> items,
+    public Receipt generateReceipt(IStoreService store, ICashierService cashier, List<CustomCommoditiesDataType> items,
                                     BigDecimal totalCost, BigDecimal change) {
         int receiptId = store.getReceiptCount() + 1;
         store.setReceiptCount(receiptId);
@@ -149,4 +150,5 @@ public class CashierService implements ICashierService {
 
         return new Receipt(receiptId, store, cashier, issued, items, totalCost, change);
     }
+// =====================================================================================================================
 }

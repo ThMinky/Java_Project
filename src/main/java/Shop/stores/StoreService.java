@@ -2,7 +2,7 @@ package Shop.stores;
 
 import Shop.commodities.Commodity;
 import Shop.commodities.CustomCommoditiesDataType;
-import Shop.employees.ICashierService;
+import Shop.cashiers.ICashierService;
 import Shop.exceptions.CommodityNotFoundException;
 import Shop.receipts.Receipt;
 

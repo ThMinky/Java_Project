@@ -1,7 +1,7 @@
 package Shop.receipts;
 
 import Shop.commodities.CustomCommoditiesDataType;
-import Shop.employees.ICashierService;
+import Shop.cashiers.ICashierService;
 import Shop.stores.IStoreService;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;

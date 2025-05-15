@@ -1,7 +1,7 @@
 package Shop.helpers;
 
 import Shop.commodities.CustomCommoditiesDataType;
-import Shop.employees.ICashierService;
+import Shop.cashiers.ICashierService;
 import Shop.exceptions.fileexceptions.*;
 import Shop.receipts.Receipt;
 import Shop.stores.IStoreService;

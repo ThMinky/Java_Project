@@ -3,7 +3,7 @@ package Shop.stores;
 import Shop.commodities.Commodity;
 import Shop.commodities.CommodityCategory;
 import Shop.commodities.CustomCommoditiesDataType;
-import Shop.employees.ICashierService;
+import Shop.cashiers.ICashierService;
 import Shop.receipts.Receipt;
 
 import java.math.BigDecimal;

@@ -1,4 +1,4 @@
-package Shop.employees;
+package Shop.cashiers;
 
 import Shop.stores.IStoreService;
 
