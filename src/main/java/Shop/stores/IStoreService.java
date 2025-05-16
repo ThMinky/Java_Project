@@ -1,8 +1,8 @@
 package Shop.stores;
 
+import Shop.cashiers.ICashierService;
 import Shop.commodities.Commodity;
 import Shop.commodities.CustomCommoditiesDataType;
-import Shop.cashiers.ICashierService;
 import Shop.exceptions.CommodityNotFoundException;
 import Shop.receipts.Receipt;
 

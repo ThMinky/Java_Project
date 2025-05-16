@@ -1,8 +1,9 @@
 package org.example;
 
 import Shop.stores.IStoreService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -11,17 +12,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class StoreServiceTest {
-
-    IStoreService iStoreServiceMocked;
-
-    @BeforeEach
-    void setup() {
-        iStoreServiceMocked = mock(IStoreService.class);
-    }
+@ExtendWith(MockitoExtension.class)
+class TestStoreServiceMock {
 
     @Test
     void testCalculatePureRevenueMocked() {
+        IStoreService iStoreServiceMocked = mock(IStoreService.class);
+
         when(iStoreServiceMocked.calculateRevenue()).thenReturn(new BigDecimal("10000.00"));
         when(iStoreServiceMocked.calculateMonthlySalaries()).thenReturn(new BigDecimal("2500.00"));
         when(iStoreServiceMocked.calculateTotalDeliveryCost()).thenReturn(new BigDecimal("1500.00"));

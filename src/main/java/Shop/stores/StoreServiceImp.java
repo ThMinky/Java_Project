@@ -13,10 +13,10 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Set;
 
-public class StoreService implements IStoreService {
+public class StoreServiceImp implements IStoreService {
     private final Store store;
 
-    public StoreService(Store store) {
+    public StoreServiceImp(Store store) {
         this.store = store;
     }
 

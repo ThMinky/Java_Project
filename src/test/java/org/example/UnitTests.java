@@ -1,11 +1,12 @@
 package org.example;
 
+import Shop.cashiers.Cashier;
+import Shop.cashiers.CashierServiceImp;
+import Shop.cashiers.ICashierService;
+import Shop.cashiers.CashierServiceHelper;
 import Shop.commodities.Commodity;
 import Shop.commodities.CommodityCategory;
 import Shop.commodities.CustomCommoditiesDataType;
-import Shop.cashiers.Cashier;
-import Shop.cashiers.CashierService;
-import Shop.cashiers.ICashierService;
 import Shop.exceptions.*;
 import Shop.exceptions.fileexceptions.*;
 import Shop.helpers.ReceiptFileManager;
@@ -13,7 +14,7 @@ import Shop.helpers.ReceiptPrinter;
 import Shop.receipts.Receipt;
 import Shop.stores.IStoreService;
 import Shop.stores.Store;
-import Shop.stores.StoreService;
+import Shop.stores.StoreServiceImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -27,7 +28,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestService {
+public class UnitTests {
     private static int storeIdCounter = 0;
 
     Set<IStoreService> stores;
@@ -37,6 +38,7 @@ public class TestService {
 
     Cashier cashierData;
     ICashierService cashier;
+    CashierServiceHelper helper;
 
     Commodity commodity;
 
@@ -47,11 +49,13 @@ public class TestService {
         stores = new HashSet<>();
 
         storeData = new Store(storeIdCounter + 1, "MegaStore", BigDecimal.valueOf(10), BigDecimal.valueOf(10), BigDecimal.valueOf(10), 3);
-        store = new StoreService(storeData);
+        store = new StoreServiceImp(storeData);
         stores.add(store);
 
         cashierData = new Cashier("Bob", store.getNextCashierId(), BigDecimal.valueOf(1800), store);
-        cashier = new CashierService(cashierData);
+        helper = new CashierServiceHelper();
+        cashier = new CashierServiceImp(cashierData, helper);
+
         store.hireCashier(cashier);
 
         commodity = new Commodity(store.getNextCommodityId(), "Apple", CommodityCategory.EATABLE,
@@ -65,7 +69,7 @@ public class TestService {
     @Test
     public void hiringCashier() {
         Cashier newCashierData = new Cashier("Bob", store.getNextCashierId(), BigDecimal.valueOf(1500), store);
-        ICashierService newCashier = new CashierService(newCashierData);
+        ICashierService newCashier = new CashierServiceImp(newCashierData, helper);
 
         store.hireCashier(newCashier);
 
@@ -223,7 +227,7 @@ public class TestService {
     @Test
     public void calculateMonthlySalaries() {
         Cashier newCashierData = new Cashier("BobTheBuilder", store.getNextCashierId(), BigDecimal.valueOf(2000), store);
-        ICashierService newCashier = new CashierService(newCashierData);
+        ICashierService newCashier = new CashierServiceImp(newCashierData, helper);
 
         assertDoesNotThrow(() -> store.hireCashier(newCashier));
 
