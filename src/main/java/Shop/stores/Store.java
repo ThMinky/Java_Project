@@ -1,9 +1,9 @@
 package Shop.stores;
 
+import Shop.cashiers.ICashierService;
 import Shop.commodities.Commodity;
 import Shop.commodities.CommodityCategory;
 import Shop.commodities.CustomCommoditiesDataType;
-import Shop.cashiers.ICashierService;
 import Shop.receipts.Receipt;
 
 import java.math.BigDecimal;
@@ -12,8 +12,8 @@ import java.util.*;
 public class Store {
     private int id;
     private String name;
-    private BigDecimal eatableMarkupPercentage;
-    private BigDecimal nonEatableMarkupPercentage;
+
+    private EnumMap<CommodityCategory, BigDecimal> markupPercentages;
     private BigDecimal expiryDiscountPercentage;
     private int expiryDiscountThresholdDays;
 
@@ -28,19 +28,18 @@ public class Store {
 
     private int receiptCount;
 
-    private Map<CommodityCategory, BigDecimal> markupPercentages = new EnumMap<>(CommodityCategory.class);
+    public Store(int id, String name, BigDecimal eatableMarkupPercentage, BigDecimal nonEatableMarkupPercentage,
+                 BigDecimal expiryDiscountPercentage, int expiryDiscountThresholdDays) {
 
-    public Store(int id, String name, BigDecimal eatableMarkupPercentage, BigDecimal nonEatableMarkupPercentage, BigDecimal expiryDiscountPercentage, int expiryDiscountThresholdDays) {
         this.id = id;
         this.name = name;
-        this.eatableMarkupPercentage = eatableMarkupPercentage;
-        this.nonEatableMarkupPercentage = nonEatableMarkupPercentage;
-        this.expiryDiscountPercentage = expiryDiscountPercentage;
-        this.expiryDiscountThresholdDays = expiryDiscountThresholdDays;
 
-        this.markupPercentages = new EnumMap<>(CommodityCategory.class);
+        markupPercentages = new EnumMap<>(CommodityCategory.class);
         this.markupPercentages.put(CommodityCategory.EATABLE, eatableMarkupPercentage);
         this.markupPercentages.put(CommodityCategory.NONEATABLE, nonEatableMarkupPercentage);
+
+        this.expiryDiscountPercentage = expiryDiscountPercentage;
+        this.expiryDiscountThresholdDays = expiryDiscountThresholdDays;
     }
 
     // Getters and Setters
@@ -61,19 +60,19 @@ public class Store {
     }
 
     public BigDecimal getEatableMarkupPercentage() {
-        return eatableMarkupPercentage;
+        return markupPercentages.getOrDefault(CommodityCategory.EATABLE, BigDecimal.ZERO);
     }
 
     public void setEatableMarkupPercentage(BigDecimal eatableMarkupPercentage) {
-        this.eatableMarkupPercentage = eatableMarkupPercentage;
+        markupPercentages.put(CommodityCategory.EATABLE, eatableMarkupPercentage);
     }
 
     public BigDecimal getNonEatableMarkupPercentage() {
-        return nonEatableMarkupPercentage;
+        return markupPercentages.getOrDefault(CommodityCategory.NONEATABLE, BigDecimal.ZERO);
     }
 
     public void setNonEatableMarkupPercentage(BigDecimal nonEatableMarkupPercentage) {
-        this.nonEatableMarkupPercentage = nonEatableMarkupPercentage;
+        markupPercentages.put(CommodityCategory.NONEATABLE, nonEatableMarkupPercentage);
     }
 
     public BigDecimal getExpiryDiscountPercentage() {
@@ -150,10 +149,6 @@ public class Store {
 
     public Map<CommodityCategory, BigDecimal> getMarkupPercentages() {
         return markupPercentages;
-    }
-
-    public void setMarkupPercentages(Map<CommodityCategory, BigDecimal> markupPercentages) {
-        this.markupPercentages = markupPercentages;
     }
     // -----------------
 }

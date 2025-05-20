@@ -15,7 +15,9 @@ public final class Commodity {
 
     private LocalDate expiryDate;
 
-    public Commodity(int id, String name, CommodityCategory category, BigDecimal deliveryPrice, BigDecimal sellingPrice, BigDecimal quantity, LocalDate expiryDate) {
+    public Commodity(int id, String name, CommodityCategory category, BigDecimal deliveryPrice, BigDecimal sellingPrice,
+                     BigDecimal quantity, LocalDate expiryDate) {
+
         this.id = id;
         this.name = name;
         this.category = category;

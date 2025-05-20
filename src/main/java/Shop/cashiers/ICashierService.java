@@ -1,6 +1,5 @@
 package Shop.cashiers;
 
-import Shop.commodities.Commodity;
 import Shop.commodities.CustomCommoditiesDataType;
 import Shop.exceptions.*;
 import Shop.receipts.Receipt;

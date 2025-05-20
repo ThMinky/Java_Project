@@ -1,7 +1,7 @@
 package Shop.helpers;
 
-import Shop.commodities.CustomCommoditiesDataType;
 import Shop.cashiers.ICashierService;
+import Shop.commodities.CustomCommoditiesDataType;
 import Shop.exceptions.fileexceptions.*;
 import Shop.receipts.Receipt;
 import Shop.stores.IStoreService;
@@ -52,48 +52,15 @@ public class ReceiptFileManager {
             StoreNotFoundException, CashierNotFoundException,
             ReceiptParseException, NoValidReceiptsException {
 
+        File receiptDir = getReceiptDirectory("receipts");
+        File[] receiptFiles = getReceiptFiles(receiptDir);
+
+        ObjectMapper mapper = createObjectMapper();
+
         Set<Receipt> receipts = new HashSet<>();
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
-        File receiptDir = new File("receipts");
-        if (!receiptDir.exists() || !receiptDir.isDirectory()) {
-            throw new ReceiptsDirectoryNotFoundException();
-        }
-
-        File[] files = receiptDir.listFiles((dir, name) -> name.endsWith(".json"));
-        if (files == null || files.length == 0) {
-            throw new NoReceiptFilesFoundException();
-        }
-
-        for (File file : files) {
-            try {
-                JsonNode node = mapper.readTree(file);
-
-                int id = node.get("id").asInt();
-                int storeId = node.get("storeId").asInt();
-                int cashierId = node.get("cashierId").asInt();
-                LocalDateTime issuedDateTime = LocalDateTime.parse(node.get("issuedDateTime").asText(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-                BigDecimal totalCost = new BigDecimal(node.get("totalCost").asText());
-                BigDecimal change = new BigDecimal(node.get("change").asText());
-                List<CustomCommoditiesDataType> commodities = parseCommodities(node.get("purchasedCommodities"));
-
-                IStoreService store = findStoreById(stores, storeId);
-                if (store == null) {
-                    throw new StoreNotFoundException(storeId);
-                }
-
-                ICashierService cashier = findCashierById(store.getCashiers(), cashierId);
-                if (cashier == null) {
-                    throw new CashierNotFoundException(cashierId, storeId);
-                }
-
-                receipts.add(new Receipt(id, store, cashier, issuedDateTime, commodities, totalCost, change));
-
-            } catch (IOException e) {
-                throw new ReceiptParseException(file.getName(), e);
-            }
+        for (File file : receiptFiles) {
+            receipts.add(parseReceipt(file, mapper, stores));
         }
 
         if (receipts.isEmpty()) {
@@ -103,13 +70,60 @@ public class ReceiptFileManager {
         return receipts;
     }
 
-
-    private static IStoreService findStoreById(Set<IStoreService> stores, int id) {
-        return stores.stream().filter(s -> s.getId() == id).findFirst().orElse(null);
+    private static File getReceiptDirectory(String path) throws ReceiptsDirectoryNotFoundException {
+        File dir = new File(path);
+        if (!dir.exists() || !dir.isDirectory()) {
+            throw new ReceiptsDirectoryNotFoundException();
+        }
+        return dir;
     }
 
-    private static ICashierService findCashierById(Set<ICashierService> cashiers, int id) {
-        return cashiers.stream().filter(c -> c.getId() == id).findFirst().orElse(null);
+    private static File[] getReceiptFiles(File dir) throws NoReceiptFilesFoundException {
+        File[] files = dir.listFiles((d, name) -> name.endsWith(".json"));
+        if (files == null || files.length == 0) {
+            throw new NoReceiptFilesFoundException();
+        }
+        return files;
+    }
+
+    private static ObjectMapper createObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        return mapper;
+    }
+
+    private static Receipt parseReceipt(File file, ObjectMapper mapper, Set<IStoreService> stores) throws ReceiptParseException,
+            StoreNotFoundException, CashierNotFoundException {
+
+        try {
+            JsonNode node = mapper.readTree(file);
+
+            int id = node.get("id").asInt();
+            int storeId = node.get("storeId").asInt();
+            int cashierId = node.get("cashierId").asInt();
+
+            LocalDateTime issuedDateTime = LocalDateTime.parse(node.get("issuedDateTime").asText(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+            BigDecimal totalCost = new BigDecimal(node.get("totalCost").asText());
+            BigDecimal change = new BigDecimal(node.get("change").asText());
+            List<CustomCommoditiesDataType> commodities = parseCommodities(node.get("purchasedCommodities"));
+
+            IStoreService store = findStoreById(stores, storeId);
+            if (store == null) {
+                throw new StoreNotFoundException(storeId);
+            }
+
+            ICashierService cashier = findCashierById(store.getCashiers(), cashierId);
+            if (cashier == null) {
+                throw new CashierNotFoundException(cashierId, storeId);
+            }
+
+            return new Receipt(id, store, cashier, issuedDateTime, commodities, totalCost, change);
+
+        } catch (IOException e) {
+            throw new ReceiptParseException(file.getName(), e);
+        }
     }
 
     private static List<CustomCommoditiesDataType> parseCommodities(JsonNode arrayNode) {
@@ -123,5 +137,13 @@ public class ReceiptFileManager {
             list.add(new CustomCommoditiesDataType(commodityId, name, quantity, price));
         }
         return list;
+    }
+
+    private static IStoreService findStoreById(Set<IStoreService> stores, int id) {
+        return stores.stream().filter(s -> s.getId() == id).findFirst().orElse(null);
+    }
+
+    private static ICashierService findCashierById(Set<ICashierService> cashiers, int id) {
+        return cashiers.stream().filter(c -> c.getId() == id).findFirst().orElse(null);
     }
 }
