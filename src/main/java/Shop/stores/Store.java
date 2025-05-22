@@ -10,24 +10,28 @@ import java.math.BigDecimal;
 import java.util.*;
 
 public class Store {
-    private int id;
+    private final int id;
     private String name;
 
     private EnumMap<CommodityCategory, BigDecimal> markupPercentages;
     private BigDecimal expiryDiscountPercentage;
     private int expiryDiscountThresholdDays;
 
-    private BigDecimal revenue = BigDecimal.ZERO;
+    private BigDecimal revenue;
 
-    private List<Commodity> availableCommodities = new ArrayList<>();
-    private List<Commodity> deliveredCommodities = new ArrayList<>();
-    private List<CustomCommoditiesDataType> soldCommodities = new ArrayList<>();
+    private List<Commodity> availableCommodities;
+    private List<Commodity> deliveredCommodities;
+    private List<CustomCommoditiesDataType> soldCommodities;
 
-    private Set<ICashierService> cashiers = new HashSet<>();
-    private Set<Receipt> receipts = new HashSet<>();
+    private Set<ICashierService> cashiers;
+    private Set<Receipt> receipts;
 
     private int receiptCount;
 
+    private int commodityIdCounter;
+    private int cashierIdCounter;
+
+    // Constructor
     public Store(int id, String name, BigDecimal eatableMarkupPercentage, BigDecimal nonEatableMarkupPercentage,
                  BigDecimal expiryDiscountPercentage, int expiryDiscountThresholdDays) {
 
@@ -40,15 +44,25 @@ public class Store {
 
         this.expiryDiscountPercentage = expiryDiscountPercentage;
         this.expiryDiscountThresholdDays = expiryDiscountThresholdDays;
+
+        revenue = BigDecimal.ZERO;
+
+        availableCommodities = new ArrayList<>();
+        deliveredCommodities = new ArrayList<>();
+        soldCommodities = new ArrayList<>();
+
+        cashiers = new HashSet<>();
+        receipts = new HashSet<>();
+
+        receiptCount = 0;
+
+        commodityIdCounter = 0;
+        cashierIdCounter = 0;
     }
 
     // Getters and Setters
     public int getId() {
         return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public String getName() {
@@ -57,6 +71,10 @@ public class Store {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public EnumMap<CommodityCategory, BigDecimal> getMarkupPercentages() {
+        return markupPercentages;
     }
 
     public BigDecimal getEatableMarkupPercentage() {
@@ -147,8 +165,13 @@ public class Store {
         this.receiptCount = receiptCount;
     }
 
-    public Map<CommodityCategory, BigDecimal> getMarkupPercentages() {
-        return markupPercentages;
+
+    public int getNextCommodityId() {
+        return commodityIdCounter++;
+    }
+
+    public int getNextCashierId() {
+        return cashierIdCounter++;
     }
     // -----------------
 }

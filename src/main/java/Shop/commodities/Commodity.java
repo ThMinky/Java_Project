@@ -3,36 +3,37 @@ package Shop.commodities;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public final class Commodity {
-    private int id;
+public class Commodity {
+    private final int id;
     private String name;
     private CommodityCategory category;
 
     private BigDecimal deliveryPrice;
-    private BigDecimal sellingPrice;
 
     private BigDecimal quantity;
-
     private LocalDate expiryDate;
 
-    public Commodity(int id, String name, CommodityCategory category, BigDecimal deliveryPrice, BigDecimal sellingPrice,
-                     BigDecimal quantity, LocalDate expiryDate) {
+    // Constructor
+    public Commodity(int id, String name, CommodityCategory category, BigDecimal deliveryPrice, BigDecimal quantity, LocalDate expiryDate) {
 
         this.id = id;
         this.name = name;
         this.category = category;
+
         this.deliveryPrice = deliveryPrice;
-        this.sellingPrice = sellingPrice;
+
         this.quantity = quantity;
         this.expiryDate = expiryDate;
     }
 
+    // Copy Constructor
     public Commodity(Commodity other) {
         this.id = other.id;
         this.name = other.name;
         this.category = other.category;
+
         this.deliveryPrice = other.deliveryPrice != null ? new BigDecimal(other.deliveryPrice.toString()) : null;
-        this.sellingPrice = other.sellingPrice != null ? new BigDecimal(other.sellingPrice.toString()) : null;
+
         this.quantity = other.quantity != null ? new BigDecimal(other.quantity.toString()) : null;
         this.expiryDate = other.expiryDate;
     }
@@ -40,10 +41,6 @@ public final class Commodity {
     // Getters / Setters
     public int getId() {
         return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public String getName() {
@@ -68,14 +65,6 @@ public final class Commodity {
 
     public void setDeliveryPrice(BigDecimal deliveryPrice) {
         this.deliveryPrice = deliveryPrice;
-    }
-
-    public BigDecimal getSellingPrice() {
-        return sellingPrice;
-    }
-
-    public void setSellingPrice(BigDecimal sellingPrice) {
-        this.sellingPrice = sellingPrice;
     }
 
     public BigDecimal getQuantity() {

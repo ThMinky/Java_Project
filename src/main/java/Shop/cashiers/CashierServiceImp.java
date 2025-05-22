@@ -2,7 +2,8 @@ package Shop.cashiers;
 
 import Shop.commodities.Commodity;
 import Shop.commodities.CustomCommoditiesDataType;
-import Shop.exceptions.*;
+import Shop.exceptions.CommodityNotFoundException;
+import Shop.exceptions.InsufficientFundsException;
 import Shop.receipts.Receipt;
 import Shop.stores.IStoreService;
 
@@ -14,6 +15,7 @@ public class CashierServiceImp implements ICashierService {
     public Cashier cashier;
     public CashierServiceHelper helper;
 
+    // Constructor
     public CashierServiceImp(Cashier cashier, CashierServiceHelper helper) {
         this.cashier = cashier;
         this.helper = helper;
@@ -62,28 +64,26 @@ public class CashierServiceImp implements ICashierService {
     // -----------------
 
     @Override
-    public Receipt sellCommodities(List<CustomCommoditiesDataType> cartCommodities, BigDecimal money)
-            throws EmptyCartException, CommodityNotFoundException, InsufficientQuantityException,
-            InsufficientFundsException, CashierNotHiredException {
+    public Receipt sellCommodities(List<CustomCommoditiesDataType> cartCommodities, BigDecimal money) throws CommodityNotFoundException, InsufficientFundsException {
 
         IStoreService store = cashier.getStore();
 
-        helper.validateCashier(store, cashier);
+        helper.validateCashier(store, this);
         helper.validateCart(cartCommodities);
 
         BigDecimal totalCost = BigDecimal.ZERO;
         List<CustomCommoditiesDataType> purchasedCommodities = new ArrayList<>();
 
         for (CustomCommoditiesDataType cartItem : cartCommodities) {
-            Commodity available = helper.findCommodityById(store, cartItem.getId());
+            Commodity available = helper.findCommodityById(store.getAvailableCommodities(), cartItem.getId());
 
             helper.validateStockAvailability(available, cartItem.getQuantity());
 
-            BigDecimal itemTotal = helper.calculateItemTotal(available, cartItem.getQuantity());
+            BigDecimal itemTotal = helper.calculateItemTotal(this, available, cartItem.getQuantity());
             totalCost = totalCost.add(itemTotal);
 
             Commodity updatedStock = helper.updateAvailableStock(available, cartItem.getQuantity());
-            CustomCommoditiesDataType purchasedItem = helper.createPurchasedItem(updatedStock, cartItem.getQuantity());
+            CustomCommoditiesDataType purchasedItem = helper.createPurchasedItem(this, updatedStock, cartItem.getQuantity());
             purchasedCommodities.add(purchasedItem);
 
             helper.updateSoldCommodities(store, purchasedItem);

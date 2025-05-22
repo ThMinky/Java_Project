@@ -13,7 +13,7 @@ import java.util.List;
 
 @JsonPropertyOrder({"id", "storeName", "storeId", "cashierName", "cashierId", "issuedDateTime", "purchasedCommodities", "totalCost", "change"})
 public class Receipt {
-    private int id;
+    private final int id;
 
     @JsonIgnore
     private ICashierService cashier;
@@ -29,6 +29,7 @@ public class Receipt {
     private BigDecimal totalCost;
     private BigDecimal change;
 
+    // Constructor
     public Receipt(int id, IStoreService store, ICashierService cashier, LocalDateTime issuedDateTime, List<CustomCommoditiesDataType> soldCommodities,
                    BigDecimal totalCost, BigDecimal change) {
         this.id = id;
@@ -45,10 +46,6 @@ public class Receipt {
     // Getters and Setters
     public int getId() {
         return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public ICashierService getCashier() {

@@ -3,14 +3,14 @@
   "storeName" : "MegaStore",
   "storeId" : 1,
   "cashierName" : "Bob",
-  "cashierId" : 1,
-  "issuedDateTime" : "2025-05-21 00:23:00",
+  "cashierId" : 0,
+  "issuedDateTime" : "2025-05-22 14:20:38",
   "purchasedCommodities" : [ {
-    "id" : 1,
+    "id" : 0,
     "name" : "Apple",
     "quantity" : 1,
-    "price" : 2.20
+    "price" : 1.10
   } ],
-  "totalCost" : 2.20,
-  "change" : 12.80
+  "totalCost" : 1.10,
+  "change" : 13.90
 }

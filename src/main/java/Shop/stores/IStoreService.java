@@ -2,11 +2,13 @@ package Shop.stores;
 
 import Shop.cashiers.ICashierService;
 import Shop.commodities.Commodity;
+import Shop.commodities.CommodityCategory;
 import Shop.commodities.CustomCommoditiesDataType;
 import Shop.exceptions.CommodityNotFoundException;
 import Shop.receipts.Receipt;
 
 import java.math.BigDecimal;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Set;
 
@@ -16,6 +18,8 @@ public interface IStoreService {
     int getId();
 
     String getName();
+
+    EnumMap<CommodityCategory, BigDecimal> getMarkupPercentages();
 
     BigDecimal getRevenue();
 
@@ -31,29 +35,26 @@ public interface IStoreService {
 
     Set<Receipt> getReceipts();
 
+    void setReceipts(Set<Receipt> newReceipts);
+
     int getReceiptCount();
 
     void setReceiptCount(int receiptCount);
-    // -----------------
 
-    // Commodity management
-    void addCommodity(Commodity commodity);
 
-    Commodity findCommodityById(List<Commodity> list, int id);
-
-    Boolean applyExpiryDiscount(Commodity commodity);
-
-    Boolean checkForExpired(Commodity commodity) throws CommodityNotFoundException;
-
-    // ID generation
     int getNextCommodityId();
 
     int getNextCashierId();
+    // -----------------
 
-    // Cashier management
+    void addCommodity(Commodity commodity);
+
     void hireCashier(ICashierService cashier);
 
-    // Financial calculations
+    BigDecimal applyExpiryDiscount(Commodity commodity);
+
+    Boolean checkForExpired(Commodity commodity) throws CommodityNotFoundException;
+
     BigDecimal calculateTotalDeliveryCost();
 
     BigDecimal calculateMonthlySalaries();

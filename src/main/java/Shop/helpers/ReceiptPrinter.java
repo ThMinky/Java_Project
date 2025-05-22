@@ -19,7 +19,7 @@ public class ReceiptPrinter {
 
         for (CustomCommoditiesDataType item : receipt.getPurchasedCommodities()) {
             BigDecimal totalItemPrice = item.getPrice().multiply(item.getQuantity());
-            System.out.printf("%s - x%.2f - %.2f\n", item.getName(), item.getQuantity(), totalItemPrice);
+            System.out.printf("%s - x%.0f - %.2f\n", item.getName(), item.getQuantity(), totalItemPrice);
         }
 
         System.out.println("----------------------------");

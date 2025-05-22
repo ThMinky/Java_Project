@@ -1,23 +1,29 @@
 package Shop.stores;
 
-import Shop.commodities.Commodity;
-import Shop.commodities.CustomCommoditiesDataType;
 import Shop.cashiers.ICashierService;
+import Shop.commodities.Commodity;
+import Shop.commodities.CommodityCategory;
+import Shop.commodities.CustomCommoditiesDataType;
 import Shop.exceptions.CommodityNotFoundException;
+import Shop.exceptions.ExpiredDateRException;
 import Shop.receipts.Receipt;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Set;
 
 public class StoreServiceImp implements IStoreService {
-    private final Store store;
+    public Store store;
+    public StoreServiceHelper helper;
 
-    public StoreServiceImp(Store store) {
+    // Constructor
+    public StoreServiceImp(Store store, StoreServiceHelper helper) {
         this.store = store;
+        this.helper = helper;
     }
 
     // Getters / Setters
@@ -29,6 +35,11 @@ public class StoreServiceImp implements IStoreService {
     @Override
     public String getName() {
         return store.getName();
+    }
+
+    @Override
+    public EnumMap<CommodityCategory, BigDecimal> getMarkupPercentages() {
+        return store.getMarkupPercentages();
     }
 
     @Override
@@ -67,6 +78,11 @@ public class StoreServiceImp implements IStoreService {
     }
 
     @Override
+    public  void setReceipts(Set<Receipt> newReceipts){
+        store.setReceipts(newReceipts);
+    }
+
+    @Override
     public int getReceiptCount() {
         return store.getReceiptCount();
     }
@@ -75,61 +91,66 @@ public class StoreServiceImp implements IStoreService {
     public void setReceiptCount(int receiptCount) {
         store.setReceiptCount(receiptCount);
     }
+
+
+    @Override
+    public int getNextCommodityId() {
+        return store.getNextCommodityId();
+    }
+
+    @Override
+    public int getNextCashierId() {
+        return store.getNextCashierId();
+    }
     // -----------------
 
     @Override
     public void addCommodity(Commodity commodity) {
-        Commodity delivered = findCommodityById(store.getDeliveredCommodities(), commodity.getId());
-        Commodity available = findCommodityById(store.getAvailableCommodities(), commodity.getId());
+        if (commodity.getExpiryDate() != null && commodity.getExpiryDate().isBefore(LocalDate.now())) {
+            throw new ExpiredDateRException(commodity.getName(), commodity.getExpiryDate().toString());
+        }
+
+        Commodity delivered = helper.findCommodityById(store.getDeliveredCommodities(), commodity.getId());
+        Commodity available = helper.findCommodityById(store.getAvailableCommodities(), commodity.getId());
 
         if (delivered != null) {
             delivered.setQuantity(delivered.getQuantity().add(commodity.getQuantity()));
         } else {
-            store.getDeliveredCommodities().add(new Commodity(commodity)); // Make copy if needed
+            store.getDeliveredCommodities().add(new Commodity(commodity));
         }
 
         if (available != null) {
             available.setQuantity(available.getQuantity().add(commodity.getQuantity()));
         } else {
-            BigDecimal markupPercentage = store.getMarkupPercentages().getOrDefault(commodity.getCategory(), BigDecimal.ZERO);
-
-            BigDecimal multiplier = BigDecimal.ONE.add(markupPercentage.divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP));
-            BigDecimal newPrice = commodity.getSellingPrice().multiply(multiplier).setScale(2, RoundingMode.HALF_UP);
-
             Commodity availableCopy = new Commodity(commodity);
-            availableCopy.setSellingPrice(newPrice);
-
             store.getAvailableCommodities().add(availableCopy);
         }
     }
 
     @Override
-    public Commodity findCommodityById(List<Commodity> list, int id) {
-        for (Commodity item : list) {
-            if (item.getId() == id) {
-                return item;
-            }
-        }
-        return null;
+    public void hireCashier(ICashierService cashier) {
+        store.getCashiers().add(cashier);
     }
 
     @Override
-    public Boolean applyExpiryDiscount(Commodity commodity) {
-        if (commodity.getExpiryDate() == null) return false;
+    public BigDecimal applyExpiryDiscount(Commodity commodity) {
+        if (commodity.getExpiryDate() == null) {
+            return null; // or fallback to delivery price
+        }
 
         LocalDate today = LocalDate.now();
         long daysUntilExpiry = ChronoUnit.DAYS.between(today, commodity.getExpiryDate());
 
+        BigDecimal baseSellingPrice = commodity.getDeliveryPrice().multiply(helper.calculateMarkupMultiplier(this, commodity)).setScale(2, RoundingMode.HALF_UP);
+
         if (daysUntilExpiry <= store.getExpiryDiscountThresholdDays()) {
-            BigDecimal discount = commodity.getSellingPrice().multiply(store.getExpiryDiscountPercentage()).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+            BigDecimal discountPercentage = store.getExpiryDiscountPercentage();
+            BigDecimal discountMultiplier = BigDecimal.ONE.subtract(discountPercentage.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
 
-            BigDecimal newPrice = commodity.getSellingPrice().subtract(discount).setScale(2, RoundingMode.HALF_UP);
-
-            commodity.setSellingPrice(newPrice);
-            return true;
+            return baseSellingPrice.multiply(discountMultiplier).setScale(2, RoundingMode.HALF_UP);
         }
 
-        return false;
+        return baseSellingPrice;
     }
 
     @Override
@@ -152,57 +173,21 @@ public class StoreServiceImp implements IStoreService {
         return false;
     }
 
-
-    @Override
-    public int getNextCommodityId() {
-        return store.getDeliveredCommodities().size() + 1;
-    }
-
-    @Override
-    public int getNextCashierId() {
-        return store.getCashiers().size() + 1;
-    }
-
-
-    @Override
-    public void hireCashier(ICashierService cashier) {
-        store.getCashiers().add(cashier);
-    }
-
-
     @Override
     public BigDecimal calculateTotalDeliveryCost() {
-        BigDecimal totalDeliveryCost = BigDecimal.ZERO;
-
-        for (Commodity commodity : store.getDeliveredCommodities()) {
-            BigDecimal commodityDeliveryCost = commodity.getDeliveryPrice().multiply(commodity.getQuantity());
-            totalDeliveryCost = totalDeliveryCost.add(commodityDeliveryCost);
-        }
-
-        return totalDeliveryCost.setScale(2, RoundingMode.HALF_UP);
+        return store.getDeliveredCommodities().stream().map(commodity ->
+                commodity.getDeliveryPrice().multiply(commodity.getQuantity())).reduce(BigDecimal.ZERO, BigDecimal::add).setScale(2, RoundingMode.HALF_UP);
     }
 
     @Override
     public BigDecimal calculateMonthlySalaries() {
-        BigDecimal totalSalaries = BigDecimal.ZERO;
-
-        for (ICashierService cashier : store.getCashiers()) {
-            totalSalaries = totalSalaries.add(cashier.getSalary());
-        }
-
-        return totalSalaries.setScale(2, RoundingMode.HALF_UP);
+        return store.getCashiers().stream().map(ICashierService::getSalary).reduce(BigDecimal.ZERO, BigDecimal::add).setScale(2, RoundingMode.HALF_UP);
     }
 
     @Override
     public BigDecimal calculateRevenue() {
-        BigDecimal totalRevenue = BigDecimal.ZERO;
-
-        for (CustomCommoditiesDataType commodity : store.getSoldCommodities()) {
-            BigDecimal itemRevenue = commodity.getPrice().multiply(commodity.getQuantity());
-            totalRevenue = totalRevenue.add(itemRevenue);
-        }
-
-        return totalRevenue.setScale(2, RoundingMode.HALF_UP);
+        return store.getSoldCommodities().stream().map(commodity ->
+                commodity.getPrice().multiply(commodity.getQuantity())).reduce(BigDecimal.ZERO, BigDecimal::add).setScale(2, RoundingMode.HALF_UP);
     }
 
     @Override
@@ -211,7 +196,6 @@ public class StoreServiceImp implements IStoreService {
         BigDecimal salaries = calculateMonthlySalaries();
         BigDecimal deliveryCosts = calculateTotalDeliveryCost();
 
-        BigDecimal pureRevenue = revenue.subtract(salaries).subtract(deliveryCosts);
-        return pureRevenue.setScale(2, RoundingMode.HALF_UP);
+        return revenue.subtract(salaries).subtract(deliveryCosts).setScale(2, RoundingMode.HALF_UP);
     }
 }

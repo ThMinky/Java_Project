@@ -3,11 +3,12 @@ package Shop.commodities;
 import java.math.BigDecimal;
 
 public class CustomCommoditiesDataType {
-    private int id;
+    private final int id;
     private String name;
     private BigDecimal quantity;
     private BigDecimal price;
 
+    // Constructor
     public CustomCommoditiesDataType(int id, String name, BigDecimal quantity, BigDecimal price) {
         this.id = id;
         this.name = name;
