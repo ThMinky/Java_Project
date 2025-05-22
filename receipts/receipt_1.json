@@ -3,10 +3,10 @@
   "storeName" : "MegaStore",
   "storeId" : 1,
   "cashierName" : "Bob",
-  "cashierId" : 0,
-  "issuedDateTime" : "2025-05-22 14:20:38",
+  "cashierId" : 1,
+  "issuedDateTime" : "2025-05-23 01:01:23",
   "purchasedCommodities" : [ {
-    "id" : 0,
+    "id" : 1,
     "name" : "Apple",
     "quantity" : 1,
     "price" : 1.10

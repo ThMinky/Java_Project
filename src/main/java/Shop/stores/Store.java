@@ -167,11 +167,11 @@ public class Store {
 
 
     public int getNextCommodityId() {
-        return commodityIdCounter++;
+        return ++commodityIdCounter;
     }
 
     public int getNextCashierId() {
-        return cashierIdCounter++;
+        return ++cashierIdCounter;
     }
     // -----------------
 }

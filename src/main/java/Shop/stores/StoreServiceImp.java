@@ -4,8 +4,8 @@ import Shop.cashiers.ICashierService;
 import Shop.commodities.Commodity;
 import Shop.commodities.CommodityCategory;
 import Shop.commodities.CustomCommoditiesDataType;
+import Shop.exceptions.CommodityExpiredDateRException;
 import Shop.exceptions.CommodityNotFoundException;
-import Shop.exceptions.ExpiredDateRException;
 import Shop.receipts.Receipt;
 
 import java.math.BigDecimal;
@@ -107,7 +107,7 @@ public class StoreServiceImp implements IStoreService {
     @Override
     public void addCommodity(Commodity commodity) {
         if (commodity.getExpiryDate() != null && commodity.getExpiryDate().isBefore(LocalDate.now())) {
-            throw new ExpiredDateRException(commodity.getName(), commodity.getExpiryDate().toString());
+            throw new CommodityExpiredDateRException(commodity.getName(), commodity.getExpiryDate());
         }
 
         Commodity delivered = helper.findCommodityById(store.getDeliveredCommodities(), commodity.getId());
@@ -135,7 +135,7 @@ public class StoreServiceImp implements IStoreService {
     @Override
     public BigDecimal applyExpiryDiscount(Commodity commodity) {
         if (commodity.getExpiryDate() == null) {
-            return null; // or fallback to delivery price
+            return null;
         }
 
         LocalDate today = LocalDate.now();
@@ -154,8 +154,9 @@ public class StoreServiceImp implements IStoreService {
     }
 
     @Override
-    public Boolean checkForExpired(Commodity commodity) throws CommodityNotFoundException {
-        Commodity existingCommodity = store.getAvailableCommodities().stream().filter(c -> c.getId() == commodity.getId()).findFirst().orElse(null);
+    public Boolean checkForExpired(Commodity commodity) throws CommodityNotFoundException, CommodityExpiredDateRException {
+        Commodity existingCommodity = store.getAvailableCommodities().stream().filter(c ->
+                c.getId() == commodity.getId()).findFirst().orElse(null);
 
         if (existingCommodity == null) {
             throw new CommodityNotFoundException(commodity.getId());
@@ -167,7 +168,7 @@ public class StoreServiceImp implements IStoreService {
 
         if (!commodity.getExpiryDate().isAfter(today)) {
             store.getAvailableCommodities().removeIf(c -> c.getId() == commodity.getId());
-            return true;
+            throw new CommodityExpiredDateRException(commodity.getName(), commodity.getExpiryDate());
         }
 
         return false;

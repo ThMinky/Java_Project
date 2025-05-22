@@ -16,7 +16,7 @@ import static org.mockito.Mockito.when;
 class TestStoreServiceMock {
 
     @Test
-    void testCalculatePureRevenueMocked_Positive() {
+    void calculatePureRevenueMocked_Positive() {
         IStoreService iStoreServiceMocked = mock(IStoreService.class);
 
         when(iStoreServiceMocked.calculateRevenue()).thenReturn(new BigDecimal("10000.00"));
@@ -37,7 +37,7 @@ class TestStoreServiceMock {
     }
 
     @Test
-    void testCalculatePureRevenueMocked_Negative() {
+    void calculatePureRevenueMocked_Negative() {
         IStoreService iStoreServiceMocked = mock(IStoreService.class);
 
         when(iStoreServiceMocked.calculateRevenue()).thenReturn(new BigDecimal("-1000.00"));
@@ -58,7 +58,7 @@ class TestStoreServiceMock {
     }
 
     @Test
-    void testCalculatePureRevenueMocked_Zero() {
+    void calculatePureRevenueMocked_Zero() {
         IStoreService iStoreServiceMocked = mock(IStoreService.class);
 
         when(iStoreServiceMocked.calculateRevenue()).thenReturn(BigDecimal.ZERO);
