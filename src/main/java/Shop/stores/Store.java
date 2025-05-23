@@ -3,7 +3,7 @@ package Shop.stores;
 import Shop.cashiers.ICashierService;
 import Shop.commodities.Commodity;
 import Shop.commodities.CommodityCategory;
-import Shop.commodities.CustomCommoditiesDataType;
+import Shop.commodities.CustomDataType;
 import Shop.receipts.Receipt;
 
 import java.math.BigDecimal;
@@ -21,7 +21,7 @@ public class Store {
 
     private List<Commodity> availableCommodities;
     private List<Commodity> deliveredCommodities;
-    private List<CustomCommoditiesDataType> soldCommodities;
+    private List<CustomDataType> soldCommodities;
 
     private Set<ICashierService> cashiers;
     private Set<Receipt> receipts;
@@ -56,6 +56,7 @@ public class Store {
 
         receiptCount = 0;
 
+        // Custom
         commodityIdCounter = 0;
         cashierIdCounter = 0;
     }
@@ -133,11 +134,11 @@ public class Store {
         this.deliveredCommodities = deliveredCommodities;
     }
 
-    public List<CustomCommoditiesDataType> getSoldCommodities() {
+    public List<CustomDataType> getSoldCommodities() {
         return soldCommodities;
     }
 
-    public void setSoldCommodities(List<CustomCommoditiesDataType> soldCommodities) {
+    public void setSoldCommodities(List<CustomDataType> soldCommodities) {
         this.soldCommodities = soldCommodities;
     }
 
@@ -165,7 +166,7 @@ public class Store {
         this.receiptCount = receiptCount;
     }
 
-
+    // Custom
     public int getNextCommodityId() {
         return ++commodityIdCounter;
     }

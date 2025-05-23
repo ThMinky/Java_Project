@@ -3,7 +3,7 @@ package Shop.stores;
 import Shop.cashiers.ICashierService;
 import Shop.commodities.Commodity;
 import Shop.commodities.CommodityCategory;
-import Shop.commodities.CustomCommoditiesDataType;
+import Shop.commodities.CustomDataType;
 import Shop.exceptions.CommodityNotFoundException;
 import Shop.receipts.Receipt;
 
@@ -29,7 +29,7 @@ public interface IStoreService {
 
     List<Commodity> getDeliveredCommodities();
 
-    List<CustomCommoditiesDataType> getSoldCommodities();
+    List<CustomDataType> getSoldCommodities();
 
     Set<ICashierService> getCashiers();
 
@@ -41,7 +41,7 @@ public interface IStoreService {
 
     void setReceiptCount(int receiptCount);
 
-
+    // Custom
     int getNextCommodityId();
 
     int getNextCashierId();

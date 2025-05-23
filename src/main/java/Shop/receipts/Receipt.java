@@ -1,7 +1,7 @@
 package Shop.receipts;
 
-import Shop.commodities.CustomCommoditiesDataType;
 import Shop.cashiers.ICashierService;
+import Shop.commodities.CustomDataType;
 import Shop.stores.IStoreService;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -24,13 +24,13 @@ public class Receipt {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime issuedDateTime;
 
-    private List<CustomCommoditiesDataType> purchasedCommodities;
+    private List<CustomDataType> purchasedCommodities;
 
     private BigDecimal totalCost;
     private BigDecimal change;
 
     // Constructor
-    public Receipt(int id, IStoreService store, ICashierService cashier, LocalDateTime issuedDateTime, List<CustomCommoditiesDataType> soldCommodities,
+    public Receipt(int id, IStoreService store, ICashierService cashier, LocalDateTime issuedDateTime, List<CustomDataType> soldCommodities,
                    BigDecimal totalCost, BigDecimal change) {
         this.id = id;
         this.store = store;
@@ -64,11 +64,11 @@ public class Receipt {
         this.issuedDateTime = issuedDateTime;
     }
 
-    public List<CustomCommoditiesDataType> getPurchasedCommodities() {
+    public List<CustomDataType> getPurchasedCommodities() {
         return purchasedCommodities;
     }
 
-    public void setPurchasedCommodities(List<CustomCommoditiesDataType> purchasedCommodities) {
+    public void setPurchasedCommodities(List<CustomDataType> purchasedCommodities) {
         this.purchasedCommodities = purchasedCommodities;
     }
 

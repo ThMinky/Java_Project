@@ -1,6 +1,6 @@
 package Shop.cashiers;
 
-import Shop.commodities.CustomCommoditiesDataType;
+import Shop.commodities.CustomDataType;
 import Shop.exceptions.CommodityNotFoundException;
 import Shop.exceptions.InsufficientFundsException;
 import Shop.receipts.Receipt;
@@ -29,5 +29,5 @@ public interface ICashierService {
     IStoreService getStore();
     // -----------------
 
-    Receipt sellCommodities(List<CustomCommoditiesDataType> cartCommodities, BigDecimal money) throws CommodityNotFoundException, InsufficientFundsException;
+    Receipt sellCommodities(List<CustomDataType> cartCommodities, BigDecimal money) throws CommodityNotFoundException, InsufficientFundsException;
 }

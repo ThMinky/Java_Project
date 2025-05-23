@@ -1,4 +1,4 @@
-package Shop.exceptions.fileexceptions;
+package Shop.exceptions.fileExceptions;
 
 public class NoValidReceiptsException extends Exception {
     public NoValidReceiptsException() {

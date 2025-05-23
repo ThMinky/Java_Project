@@ -2,14 +2,14 @@ package Shop.commodities;
 
 import java.math.BigDecimal;
 
-public class CustomCommoditiesDataType {
+public class CustomDataType {
     private final int id;
     private String name;
     private BigDecimal quantity;
     private BigDecimal price;
 
     // Constructor
-    public CustomCommoditiesDataType(int id, String name, BigDecimal quantity, BigDecimal price) {
+    public CustomDataType(int id, String name, BigDecimal quantity, BigDecimal price) {
         this.id = id;
         this.name = name;
         this.quantity = quantity;
@@ -28,6 +28,7 @@ public class CustomCommoditiesDataType {
     public BigDecimal getQuantity() {
         return quantity;
     }
+
     public void setQuantity(BigDecimal quantity) {
         this.quantity = quantity;
     }

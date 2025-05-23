@@ -3,7 +3,7 @@ package Shop.stores;
 import Shop.cashiers.ICashierService;
 import Shop.commodities.Commodity;
 import Shop.commodities.CommodityCategory;
-import Shop.commodities.CustomCommoditiesDataType;
+import Shop.commodities.CustomDataType;
 import Shop.exceptions.CommodityExpiredDateRException;
 import Shop.exceptions.CommodityNotFoundException;
 import Shop.receipts.Receipt;
@@ -63,7 +63,7 @@ public class StoreServiceImp implements IStoreService {
     }
 
     @Override
-    public List<CustomCommoditiesDataType> getSoldCommodities() {
+    public List<CustomDataType> getSoldCommodities() {
         return store.getSoldCommodities();
     }
 
@@ -92,7 +92,7 @@ public class StoreServiceImp implements IStoreService {
         store.setReceiptCount(receiptCount);
     }
 
-
+    // Custom
     @Override
     public int getNextCommodityId() {
         return store.getNextCommodityId();

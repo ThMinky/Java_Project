@@ -1,7 +1,7 @@
 package Shop.cashiers;
 
 import Shop.commodities.Commodity;
-import Shop.commodities.CustomCommoditiesDataType;
+import Shop.commodities.CustomDataType;
 import Shop.exceptions.CashierNotHiredRException;
 import Shop.exceptions.EmptyCartRException;
 import Shop.exceptions.InsufficientFundsException;
@@ -23,7 +23,7 @@ public class CashierServiceHelper {
         return true;
     }
 
-    public boolean validateCart(List<CustomCommoditiesDataType> cartCommodities) {
+    public boolean validateCart(List<CustomDataType> cartCommodities) {
         if (cartCommodities.isEmpty()) {
             throw new EmptyCartRException();
         }
@@ -60,8 +60,8 @@ public class CashierServiceHelper {
         return commodity;
     }
 
-    public CustomCommoditiesDataType updateSoldCommodities(IStoreService store, CustomCommoditiesDataType purchased) {
-        for (CustomCommoditiesDataType sold : store.getSoldCommodities()) {
+    public CustomDataType updateSoldCommodities(IStoreService store, CustomDataType purchased) {
+        for (CustomDataType sold : store.getSoldCommodities()) {
             if (sold.getId() == purchased.getId()) {
                 sold.setQuantity(sold.getQuantity().add(purchased.getQuantity()));
                 return sold;
@@ -71,13 +71,13 @@ public class CashierServiceHelper {
         return purchased;
     }
 
-    public CustomCommoditiesDataType createPurchasedItem(ICashierService cashier, Commodity commodity, BigDecimal quantity) {
+    public CustomDataType createPurchasedItem(ICashierService cashier, Commodity commodity, BigDecimal quantity) {
         BigDecimal multiplier = calculateMarkupMultiplier(cashier, commodity);
         BigDecimal priceWithMarkup = commodity.getDeliveryPrice().multiply(multiplier);
-        return new CustomCommoditiesDataType(commodity.getId(), commodity.getName(), quantity, priceWithMarkup);
+        return new CustomDataType(commodity.getId(), commodity.getName(), quantity, priceWithMarkup);
     }
 
-    public Receipt generateReceipt(IStoreService store, ICashierService cashier, List<CustomCommoditiesDataType> items, BigDecimal totalCost, BigDecimal change) {
+    public Receipt generateReceipt(IStoreService store, ICashierService cashier, List<CustomDataType> items, BigDecimal totalCost, BigDecimal change) {
         int receiptId = store.getReceiptCount() + 1;
         store.setReceiptCount(receiptId);
         LocalDateTime issued = LocalDateTime.now();

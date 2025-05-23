@@ -6,7 +6,7 @@ import Shop.cashiers.CashierServiceImp;
 import Shop.cashiers.ICashierService;
 import Shop.commodities.Commodity;
 import Shop.commodities.CommodityCategory;
-import Shop.commodities.CustomCommoditiesDataType;
+import Shop.commodities.CustomDataType;
 import Shop.exceptions.CommodityExpiredDateRException;
 import Shop.exceptions.InsufficientFundsException;
 import Shop.exceptions.InsufficientQuantityRException;
@@ -160,7 +160,7 @@ public class UnitTests {
                 BigDecimal.valueOf(1), BigDecimal.valueOf(10), LocalDate.now().plusDays(5));
         store.addCommodity(commodity);
 
-        List<CustomCommoditiesDataType> cart = List.of(new CustomCommoditiesDataType(commodity.getId(), commodity.getName(),
+        List<CustomDataType> cart = List.of(new CustomDataType(commodity.getId(), commodity.getName(),
                 BigDecimal.valueOf(1), storeHelper.calculateMarkupMultiplier(store, commodity)));
 
         assertDoesNotThrow(() -> cashierService.sellCommodities(cart, BigDecimal.valueOf(100)));
@@ -192,7 +192,7 @@ public class UnitTests {
                 BigDecimal.valueOf(1), BigDecimal.valueOf(10), LocalDate.now().plusDays(5));
         store.addCommodity(commodity);
 
-        List<CustomCommoditiesDataType> cart = List.of(new CustomCommoditiesDataType(commodity.getId(), commodity.getName(),
+        List<CustomDataType> cart = List.of(new CustomDataType(commodity.getId(), commodity.getName(),
                 BigDecimal.valueOf(11), storeHelper.calculateMarkupMultiplier(store, commodity)));
 
         // Test
@@ -222,7 +222,7 @@ public class UnitTests {
                 BigDecimal.valueOf(100), BigDecimal.valueOf(10), LocalDate.now().plusDays(5));
         store.addCommodity(commodity);
 
-        List<CustomCommoditiesDataType> cart = List.of(new CustomCommoditiesDataType(commodity.getId(), commodity.getName(),
+        List<CustomDataType> cart = List.of(new CustomDataType(commodity.getId(), commodity.getName(),
                 BigDecimal.valueOf(1), storeHelper.calculateMarkupMultiplier(store, commodity)));
 
         // Test
@@ -252,7 +252,7 @@ public class UnitTests {
                 BigDecimal.valueOf(1), BigDecimal.valueOf(5), null);
         store.addCommodity(commodity);
 
-        List<CustomCommoditiesDataType> cart = List.of(new CustomCommoditiesDataType(commodity.getId(), commodity.getName(),
+        List<CustomDataType> cart = List.of(new CustomDataType(commodity.getId(), commodity.getName(),
                 BigDecimal.valueOf(1), storeHelper.calculateMarkupMultiplier(store, commodity)));
 
         assertDoesNotThrow(() -> cashierService.sellCommodities(cart, BigDecimal.valueOf(100)));
@@ -428,7 +428,7 @@ public class UnitTests {
                 BigDecimal.valueOf(1), BigDecimal.valueOf(1), null);
         store.addCommodity(commodity);
 
-        List<CustomCommoditiesDataType> cart = List.of(new CustomCommoditiesDataType(commodity.getId(), commodity.getName(),
+        List<CustomDataType> cart = List.of(new CustomDataType(commodity.getId(), commodity.getName(),
                 BigDecimal.valueOf(1), storeHelper.calculateMarkupMultiplier(store, commodity)));
 
         assertDoesNotThrow(() -> cashierService.sellCommodities(cart, BigDecimal.valueOf(100)));
@@ -459,7 +459,7 @@ public class UnitTests {
                 BigDecimal.valueOf(-1), BigDecimal.valueOf(1), null);
         store.addCommodity(commodity);
 
-        List<CustomCommoditiesDataType> cart = List.of(new CustomCommoditiesDataType(commodity.getId(), commodity.getName(),
+        List<CustomDataType> cart = List.of(new CustomDataType(commodity.getId(), commodity.getName(),
                 BigDecimal.valueOf(1), storeHelper.calculateMarkupMultiplier(store, commodity)));
 
         assertDoesNotThrow(() -> cashierService.sellCommodities(cart, BigDecimal.valueOf(100)));
@@ -546,9 +546,9 @@ public class UnitTests {
     }
 
 
-    // Receipt
+    // Receipts
     @Test
-    public void printAndSaveReceipt() {
+    public void printAndSaveReceipt_One() {
         // Store
         Store storeData = new Store(1, "MegaStore", BigDecimal.valueOf(10), BigDecimal.valueOf(10),
                 BigDecimal.valueOf(10), 3);
@@ -556,18 +556,25 @@ public class UnitTests {
         IStoreService store = new StoreServiceImp(storeData, storeHelper);
 
         // Cashier
-        Cashier cashier = new Cashier("Bob", store.getNextCashierId(), BigDecimal.valueOf(1800), store);
+        Cashier cashier = new Cashier("Bob", 1, BigDecimal.valueOf(1800), store);
         CashierServiceHelper helper = new CashierServiceHelper();
         ICashierService cashierService = new CashierServiceImp(cashier, helper);
         store.hireCashier(cashierService);
 
-        // Commodity
-        Commodity commodity = new Commodity(store.getNextCommodityId(), "Apple", CommodityCategory.EATABLE,
+        // Commodities
+        Commodity commodity_one = new Commodity(store.getNextCommodityId(), "Apple", CommodityCategory.EATABLE,
                 BigDecimal.valueOf(1), BigDecimal.valueOf(10), LocalDate.now().plusDays(5));
-        store.addCommodity(commodity);
+        store.addCommodity(commodity_one);
 
-        List<CustomCommoditiesDataType> cart = List.of(new CustomCommoditiesDataType(commodity.getId(), commodity.getName(),
-                BigDecimal.valueOf(1), storeHelper.calculateMarkupMultiplier(store, commodity)));
+        Commodity commodity_two = new Commodity(store.getNextCommodityId(), "Soup", CommodityCategory.NONEATABLE,
+                BigDecimal.valueOf(2), BigDecimal.valueOf(5), LocalDate.now().plusDays(365));
+        store.addCommodity(commodity_two);
+
+        List<CustomDataType> cart = List.of(
+                new CustomDataType(commodity_one.getId(), commodity_one.getName(),
+                        BigDecimal.valueOf(3), storeHelper.calculateMarkupMultiplier(store, commodity_one)),
+                new CustomDataType(commodity_two.getId(), commodity_two.getName(),
+                        BigDecimal.valueOf(1), storeHelper.calculateMarkupMultiplier(store, commodity_two)));
 
         Receipt receipt = null;
 
@@ -577,7 +584,79 @@ public class UnitTests {
             fail("Exception during selling: " + e.getMessage());
         }
 
+        // Test
         assertNotNull(receipt);
+
+        ReceiptFileManager.writeToFile(receipt);
+        ReceiptPrinter.printReceipt(receipt);
+    }
+
+    @Test
+    public void printAndSaveReceipt_Two() {
+        // Store
+        Store storeData = new Store(1, "MegaStore", BigDecimal.valueOf(10), BigDecimal.valueOf(10),
+                BigDecimal.valueOf(10), 3);
+        StoreServiceHelper storeHelper = new StoreServiceHelper();
+        IStoreService store = new StoreServiceImp(storeData, storeHelper);
+
+        // Commodities
+        Commodity commodity_one = new Commodity(store.getNextCommodityId(), "Apple", CommodityCategory.EATABLE,
+                BigDecimal.valueOf(1), BigDecimal.valueOf(10), LocalDate.now().plusDays(5));
+        store.addCommodity(commodity_one);
+
+        Commodity commodity_two = new Commodity(store.getNextCommodityId(), "Soup", CommodityCategory.NONEATABLE,
+                BigDecimal.valueOf(2), BigDecimal.valueOf(5), LocalDate.now().plusDays(365));
+        store.addCommodity(commodity_two);
+
+        // First Receipt
+        // Cashier_1
+        Cashier cashier_one = new Cashier("Bob", 1, BigDecimal.valueOf(1000), store);
+        CashierServiceHelper helper = new CashierServiceHelper();
+        ICashierService cashierService_one = new CashierServiceImp(cashier_one, helper);
+        store.hireCashier(cashierService_one);
+
+        List<CustomDataType> cart = List.of(
+                new CustomDataType(commodity_one.getId(), commodity_one.getName(),
+                        BigDecimal.valueOf(1), storeHelper.calculateMarkupMultiplier(store, commodity_one)),
+                new CustomDataType(commodity_two.getId(), commodity_two.getName(),
+                        BigDecimal.valueOf(1), storeHelper.calculateMarkupMultiplier(store, commodity_two)));
+
+        Receipt receipt = null;
+
+        try {
+            receipt = cashierService_one.sellCommodities(cart, BigDecimal.valueOf(15));
+        } catch (Exception e) {
+            fail("Exception during selling: " + e.getMessage());
+        }
+
+        if (receipt != null) {
+            ReceiptFileManager.writeToFile(receipt);
+            ReceiptPrinter.printReceipt(receipt);
+        }
+
+        // Second Receipt
+        // Cashier_2
+        Cashier cashier_two = new Cashier("BobTheBuilder", 2, BigDecimal.valueOf(1000), store);
+        ICashierService cashierService_two = new CashierServiceImp(cashier_two, helper);
+        store.hireCashier(cashierService_two);
+
+        cart = List.of(
+                new CustomDataType(commodity_one.getId(), commodity_one.getName(),
+                        BigDecimal.valueOf(2), storeHelper.calculateMarkupMultiplier(store, commodity_one)),
+                new CustomDataType(commodity_two.getId(), commodity_two.getName(),
+                        BigDecimal.valueOf(2), storeHelper.calculateMarkupMultiplier(store, commodity_two)));
+
+        receipt = null;
+
+        try {
+            receipt = cashierService_two.sellCommodities(cart, BigDecimal.valueOf(15));
+        } catch (Exception e) {
+            fail("Exception during selling: " + e.getMessage());
+        }
+
+        // Test
+        assertNotNull(receipt);
+
         ReceiptFileManager.writeToFile(receipt);
         ReceiptPrinter.printReceipt(receipt);
     }
@@ -593,32 +672,21 @@ public class UnitTests {
         IStoreService store = new StoreServiceImp(storeData, storeHelper);
         stores.add(store);
 
-        // Cashier
-        Cashier cashier = new Cashier("Bob", store.getNextCashierId(), BigDecimal.valueOf(1800), store);
+        // Cashiers
+        Cashier cashier = new Cashier("Bob", 1, BigDecimal.valueOf(1000), store);
         CashierServiceHelper helper = new CashierServiceHelper();
         ICashierService cashierService = new CashierServiceImp(cashier, helper);
         store.hireCashier(cashierService);
 
-        // Commodity
-        Commodity commodity = new Commodity(store.getNextCommodityId(), "Apple", CommodityCategory.EATABLE,
-                BigDecimal.valueOf(1), BigDecimal.valueOf(10), LocalDate.now().plusDays(5));
-        store.addCommodity(commodity);
-
-        List<CustomCommoditiesDataType> cart = List.of(new CustomCommoditiesDataType(commodity.getId(), commodity.getName(),
-                BigDecimal.valueOf(1), storeHelper.calculateMarkupMultiplier(store, commodity)));
-
-        try {
-            Receipt receipt = cashierService.sellCommodities(cart, BigDecimal.valueOf(15));
-            ReceiptFileManager.writeToFile(receipt);
-        } catch (Exception e) {
-            fail("Failed to write receipt: " + e.getMessage());
-        }
+        Cashier cashier_two = new Cashier("BobTheBuilder", 2, BigDecimal.valueOf(1000), store);
+        ICashierService cashierService_two = new CashierServiceImp(cashier_two, helper);
+        store.hireCashier(cashierService_two);
 
         // Empty the receipts set
         Set<Receipt> emptyReceiptsSet = new HashSet<>();
         store.setReceipts(emptyReceiptsSet);
 
-        assertEquals(0, store.getReceipts().size());
+        int numOfReceiptsFound = 0;
 
         try {
             Set<Receipt> receipts = ReceiptFileManager.readReceiptsFromFiles(stores);
@@ -627,10 +695,11 @@ public class UnitTests {
                 if (receipt.getStoreId() == store.getId()) {
                     store.getReceipts().add(receipt);
                     ReceiptPrinter.printReceipt(receipt);
+                    numOfReceiptsFound++;
                 }
             }
 
-            assertEquals(1, store.getReceipts().size());
+            assertEquals(numOfReceiptsFound, store.getReceipts().size());
 
         } catch (Exception e) {
             fail("Error occurred while reading receipts: " + e.getMessage());

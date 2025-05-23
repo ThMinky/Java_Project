@@ -1,8 +1,8 @@
 package Shop.helpers;
 
 import Shop.cashiers.ICashierService;
-import Shop.commodities.CustomCommoditiesDataType;
-import Shop.exceptions.fileexceptions.*;
+import Shop.commodities.CustomDataType;
+import Shop.exceptions.fileExceptions.*;
 import Shop.receipts.Receipt;
 import Shop.stores.IStoreService;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -107,7 +107,7 @@ public class ReceiptFileManager {
 
             BigDecimal totalCost = new BigDecimal(node.get("totalCost").asText());
             BigDecimal change = new BigDecimal(node.get("change").asText());
-            List<CustomCommoditiesDataType> commodities = parseCommodities(node.get("purchasedCommodities"));
+            List<CustomDataType> commodities = parseCommodities(node.get("purchasedCommodities"));
 
             IStoreService store = findStoreById(stores, storeId);
             if (store == null) {
@@ -126,15 +126,15 @@ public class ReceiptFileManager {
         }
     }
 
-    private static List<CustomCommoditiesDataType> parseCommodities(JsonNode arrayNode) {
-        List<CustomCommoditiesDataType> list = new ArrayList<>();
+    private static List<CustomDataType> parseCommodities(JsonNode arrayNode) {
+        List<CustomDataType> list = new ArrayList<>();
         for (JsonNode item : arrayNode) {
             int commodityId = item.get("id").asInt();
             String name = item.get("name").asText();
             BigDecimal quantity = new BigDecimal(item.get("quantity").asText());
             BigDecimal price = new BigDecimal(item.get("price").asText());
 
-            list.add(new CustomCommoditiesDataType(commodityId, name, quantity, price));
+            list.add(new CustomDataType(commodityId, name, quantity, price));
         }
         return list;
     }

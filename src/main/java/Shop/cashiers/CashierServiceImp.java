@@ -1,7 +1,7 @@
 package Shop.cashiers;
 
 import Shop.commodities.Commodity;
-import Shop.commodities.CustomCommoditiesDataType;
+import Shop.commodities.CustomDataType;
 import Shop.exceptions.CommodityNotFoundException;
 import Shop.exceptions.InsufficientFundsException;
 import Shop.receipts.Receipt;
@@ -64,7 +64,7 @@ public class CashierServiceImp implements ICashierService {
     // -----------------
 
     @Override
-    public Receipt sellCommodities(List<CustomCommoditiesDataType> cartCommodities, BigDecimal money) throws CommodityNotFoundException, InsufficientFundsException {
+    public Receipt sellCommodities(List<CustomDataType> cartCommodities, BigDecimal money) throws CommodityNotFoundException, InsufficientFundsException {
 
         IStoreService store = cashier.getStore();
 
@@ -72,9 +72,9 @@ public class CashierServiceImp implements ICashierService {
         helper.validateCart(cartCommodities);
 
         BigDecimal totalCost = BigDecimal.ZERO;
-        List<CustomCommoditiesDataType> purchasedCommodities = new ArrayList<>();
+        List<CustomDataType> purchasedCommodities = new ArrayList<>();
 
-        for (CustomCommoditiesDataType cartItem : cartCommodities) {
+        for (CustomDataType cartItem : cartCommodities) {
             Commodity available = helper.findCommodityById(store.getAvailableCommodities(), cartItem.getId());
 
             helper.validateStockAvailability(available, cartItem.getQuantity());
@@ -83,7 +83,7 @@ public class CashierServiceImp implements ICashierService {
             totalCost = totalCost.add(itemTotal);
 
             Commodity updatedStock = helper.updateAvailableStock(available, cartItem.getQuantity());
-            CustomCommoditiesDataType purchasedItem = helper.createPurchasedItem(this, updatedStock, cartItem.getQuantity());
+            CustomDataType purchasedItem = helper.createPurchasedItem(this, updatedStock, cartItem.getQuantity());
             purchasedCommodities.add(purchasedItem);
 
             helper.updateSoldCommodities(store, purchasedItem);
@@ -98,5 +98,4 @@ public class CashierServiceImp implements ICashierService {
         store.getReceipts().add(receipt);
         return receipt;
     }
-// =====================================================================================================================
 }

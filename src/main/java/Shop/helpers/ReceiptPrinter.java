@@ -1,6 +1,6 @@
 package Shop.helpers;
 
-import Shop.commodities.CustomCommoditiesDataType;
+import Shop.commodities.CustomDataType;
 import Shop.receipts.Receipt;
 
 import java.math.BigDecimal;
@@ -17,7 +17,7 @@ public class ReceiptPrinter {
         System.out.println("Date: " + receipt.getIssuedDateTime().format(formatter));
         System.out.println("----------------------------");
 
-        for (CustomCommoditiesDataType item : receipt.getPurchasedCommodities()) {
+        for (CustomDataType item : receipt.getPurchasedCommodities()) {
             BigDecimal totalItemPrice = item.getPrice().multiply(item.getQuantity());
             System.out.printf("%s - x%.0f - %.2f\n", item.getName(), item.getQuantity(), totalItemPrice);
         }

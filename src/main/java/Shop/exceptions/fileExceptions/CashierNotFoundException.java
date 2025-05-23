@@ -1,4 +1,4 @@
-package Shop.exceptions.fileexceptions;
+package Shop.exceptions.fileExceptions;
 
 public class CashierNotFoundException extends Exception {
     public CashierNotFoundException(int cashierId, int storeId) {
