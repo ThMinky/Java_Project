@@ -705,4 +705,101 @@ public class UnitTests {
             fail("Error occurred while reading receipts: " + e.getMessage());
         }
     }
+
+
+    // Sell sellCommodity Helpers test
+    @Test
+    public void sellCommodityHelpersTest() {
+        // Store
+        Store storeData = new Store(1, "Store", BigDecimal.valueOf(10), BigDecimal.valueOf(10),
+                BigDecimal.valueOf(10), 3);
+        StoreServiceHelper storeHelper = new StoreServiceHelper();
+        IStoreService store = new StoreServiceImp(storeData, storeHelper);
+
+        // Cashier
+        Cashier cashier = new Cashier("Bob", store.getNextCashierId(), BigDecimal.valueOf(10), store);
+        CashierServiceHelper cashierHelper = new CashierServiceHelper();
+        ICashierService cashierService = new CashierServiceImp(cashier, cashierHelper);
+        store.hireCashier(cashierService);
+
+        // Commodity
+        Commodity commodity = new Commodity(store.getNextCommodityId(), "Apple", CommodityCategory.EATABLE,
+                BigDecimal.valueOf(1), BigDecimal.valueOf(10), LocalDate.now().plusDays(5));
+        store.addCommodity(commodity);
+
+        // findCommodityById Test
+        Commodity found = storeHelper.findCommodityById(store.getAvailableCommodities(), commodity.getId());
+        assertEquals(commodity.getId(), found.getId());
+        assertEquals("Apple", found.getName());
+        System.out.println("findCommodityById passed");
+
+        // calculateMarkupMultiplier Test
+        BigDecimal markupMultiplier = storeHelper.calculateMarkupMultiplier(store, commodity);
+        BigDecimal expectedMultiplier = new BigDecimal("1.10").setScale(2, RoundingMode.HALF_UP);
+        assertEquals(expectedMultiplier, markupMultiplier);
+        System.out.println("calculateMarkupMultiplier passed");
+
+        //Cart
+        BigDecimal quantity = BigDecimal.valueOf(1);
+        BigDecimal priceWithMarkup = commodity.getDeliveryPrice().multiply(markupMultiplier);
+        List<CustomDataType> cart = List.of(
+                new CustomDataType(commodity.getId(), commodity.getName(), quantity, priceWithMarkup));
+        BigDecimal customerFunds = BigDecimal.valueOf(100);
+
+        // validateCashier Test
+        assertTrue(cashierHelper.validateCashier(store, cashierService));
+        System.out.println("validateCashier passed");
+
+        // validateCart Test
+        assertTrue(cashierHelper.validateCart(cart));
+        System.out.println("validateCart passed");
+
+        // validateStockAvailability Test
+        assertTrue(cashierHelper.validateStockAvailability(commodity, quantity));
+        System.out.println("validateStockAvailability passed");
+
+        // calculateItemTotal Test
+        BigDecimal totalCost = cashierHelper.calculateItemTotal(cashierService, commodity, quantity);
+        BigDecimal expectedTotal = new BigDecimal("1.10").setScale(2, RoundingMode.HALF_UP);
+        assertEquals(expectedTotal, totalCost);
+        System.out.println("calculateItemTotal passed");
+
+        // validateFunds Test
+        assertDoesNotThrow(() -> {
+            boolean result = cashierHelper.validateFunds(customerFunds, totalCost);
+            assertTrue(result);
+        });
+        System.out.println("validateFunds passed");
+
+        // updateAvailableStock Test
+        Commodity updatedCommodity = cashierHelper.updateAvailableStock(commodity, quantity);
+        assertEquals(BigDecimal.valueOf(9), updatedCommodity.getQuantity());
+        System.out.println("updateAvailableStock passed");
+
+        // createPurchasedItem Test
+        CustomDataType purchasedItem = cashierHelper.createPurchasedItem(cashierService, commodity, quantity);
+        CustomDataType expectedItem = new CustomDataType(
+                commodity.getId(), commodity.getName(), BigDecimal.valueOf(1), new BigDecimal("1.10").setScale(2, RoundingMode.HALF_UP));
+
+        assertEquals(expectedItem.getId(), purchasedItem.getId());
+        assertEquals(expectedItem.getName(), purchasedItem.getName());
+        assertEquals(expectedItem.getQuantity(), purchasedItem.getQuantity());
+        assertEquals(expectedItem.getPrice(), purchasedItem.getPrice());
+        System.out.println("createPurchasedItem passed");
+
+        // updateSoldCommodities Test
+        CustomDataType updatedSold = cashierHelper.updateSoldCommodities(store, purchasedItem);
+        assertEquals(quantity, updatedSold.getQuantity());
+        System.out.println("updateSoldCommodities passed");
+
+        // generateReceipt Test
+        BigDecimal change = customerFunds.subtract(totalCost);
+        Receipt receipt = cashierHelper.generateReceipt(store, cashierService, List.of(purchasedItem), totalCost, change);
+
+        assertNotNull(receipt);
+        assertEquals(1, receipt.getPurchasedCommodities().size());
+        assertEquals(totalCost, receipt.getTotalCost());
+        assertEquals(change, receipt.getChange());
+        System.out.println("generateReceipt passed");
+    }
 }

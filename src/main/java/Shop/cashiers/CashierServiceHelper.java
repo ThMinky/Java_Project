@@ -15,6 +15,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public class CashierServiceHelper {
+
+
+    // sellCommodities Helpers
     public boolean validateCashier(IStoreService store, ICashierService cashier) {
         boolean isHired = store.getCashiers().stream().anyMatch(c -> c.getId() == cashier.getId());
         if (!isHired) {
@@ -30,6 +33,15 @@ public class CashierServiceHelper {
         return true;
     }
 
+    public Commodity findCommodityById(List<Commodity> availableCommodities, int id) {
+        for (Commodity item : availableCommodities) {
+            if (item.getId() == id) {
+                return item;
+            }
+        }
+        return null;
+    }
+
     public boolean validateStockAvailability(Commodity commodity, BigDecimal requestedQuantity) {
         if (commodity.getQuantity().compareTo(requestedQuantity) < 0) {
             throw new InsufficientQuantityRException(commodity.getName(), commodity.getQuantity(), requestedQuantity);
@@ -37,27 +49,15 @@ public class CashierServiceHelper {
         return true;
     }
 
-    public boolean validateFunds(BigDecimal money, BigDecimal totalCost) throws InsufficientFundsException {
-        if (money.compareTo(totalCost) < 0) {
-            throw new InsufficientFundsException(totalCost, money);
-        }
-        return true;
-    }
-
-    public BigDecimal calculateMarkupMultiplier(ICashierService cashier, Commodity commodity) {
-        BigDecimal markupPercentage = cashier.getStore().getMarkupPercentages().getOrDefault(commodity.getCategory(), BigDecimal.ZERO);
-        return BigDecimal.ONE.add(markupPercentage.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
-    }
-
-    public BigDecimal calculateItemTotal(ICashierService cashier, Commodity commodity, BigDecimal quantity) {
-        BigDecimal multiplier = calculateMarkupMultiplier(cashier, commodity);
-        BigDecimal deliverPriceWithMarkup = commodity.getDeliveryPrice().multiply(multiplier);
-        return deliverPriceWithMarkup.multiply(quantity);
-    }
-
     public Commodity updateAvailableStock(Commodity commodity, BigDecimal quantityPurchased) {
         commodity.setQuantity(commodity.getQuantity().subtract(quantityPurchased));
         return commodity;
+    }
+
+    public CustomDataType createPurchasedItem(ICashierService cashier, Commodity commodity, BigDecimal quantity) {
+        BigDecimal multiplier = calculateMarkupMultiplier(cashier, commodity);
+        BigDecimal priceWithMarkup = commodity.getDeliveryPrice().multiply(multiplier);
+        return new CustomDataType(commodity.getId(), commodity.getName(), quantity, priceWithMarkup);
     }
 
     public CustomDataType updateSoldCommodities(IStoreService store, CustomDataType purchased) {
@@ -71,10 +71,17 @@ public class CashierServiceHelper {
         return purchased;
     }
 
-    public CustomDataType createPurchasedItem(ICashierService cashier, Commodity commodity, BigDecimal quantity) {
+    public boolean validateFunds(BigDecimal money, BigDecimal totalCost) throws InsufficientFundsException {
+        if (money.compareTo(totalCost) < 0) {
+            throw new InsufficientFundsException(totalCost, money);
+        }
+        return true;
+    }
+
+    public BigDecimal calculateItemTotal(ICashierService cashier, Commodity commodity, BigDecimal quantity) {
         BigDecimal multiplier = calculateMarkupMultiplier(cashier, commodity);
-        BigDecimal priceWithMarkup = commodity.getDeliveryPrice().multiply(multiplier);
-        return new CustomDataType(commodity.getId(), commodity.getName(), quantity, priceWithMarkup);
+        BigDecimal deliverPriceWithMarkup = commodity.getDeliveryPrice().multiply(multiplier);
+        return deliverPriceWithMarkup.multiply(quantity);
     }
 
     public Receipt generateReceipt(IStoreService store, ICashierService cashier, List<CustomDataType> items, BigDecimal totalCost, BigDecimal change) {
@@ -84,12 +91,9 @@ public class CashierServiceHelper {
         return new Receipt(receiptId, store, cashier, issued, items, totalCost, change);
     }
 
-    public Commodity findCommodityById(List<Commodity> availableCommodities, int id) {
-        for (Commodity item : availableCommodities) {
-            if (item.getId() == id) {
-                return item;
-            }
-        }
-        return null;
+    // Generic Helper
+    public BigDecimal calculateMarkupMultiplier(ICashierService cashier, Commodity commodity) {
+        BigDecimal markupPercentage = cashier.getStore().getMarkupPercentages().getOrDefault(commodity.getCategory(), BigDecimal.ZERO);
+        return BigDecimal.ONE.add(markupPercentage.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
     }
 }
